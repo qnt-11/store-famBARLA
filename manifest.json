@@ -1,0 +1,17 @@
+{
+  "name": "BARLA STORE PREMIUM",
+  "short_name": "BARLA STORE",
+  "description": "Sistem Kasir Point of Sale Barla Store v17.9",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081840.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
