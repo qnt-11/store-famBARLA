@@ -1,10 +1,10 @@
 {
   "name": "KASIR BARLA STORE",
   "short_name": "KASIR",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0b141a",
-  "theme_color": "#00a884",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a8a",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3514/3514491.png",
