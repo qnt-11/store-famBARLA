@@ -102,7 +102,7 @@
             <div id="p-bayar" class="fixed bottom-[48px] left-0 w-full bg-[#131314] px-4 py-3 shadow-[0_-4px_15px_rgba(0,0,0,0.8)] border-t border-[#2b2d31] z-30">
                 <div class="flex justify-between items-center mb-2 gap-3 max-w-md mx-auto">
                     <div class="flex flex-col"><span class="text-[9px] font-black text-white uppercase tracking-wide">Total</span><span id="t-total" class="text-2xl font-black text-[#ff0000] leading-none tracking-tighter">Rp 0</span></div>
-                    <div class="w-1/2"><input type="text" id="i-bayar" inputmode="numeric" oninput="formatRupiah(this)" placeholder="Bayar" class="w-full text-right text-base font-black px-3 py-1.5 rounded-lg outline-none focus:border-[#3b82f6] transition-all"></div>
+                    <div class="w-1/2"><input type="text" id="i-bayar" inputmode="numeric" oninput="formatRupiah(this)" placeholder="Bayar" class="w-full text-right text-base font-black px-3 py-1.5 rounded-lg outline-none transition-all"></div>
                 </div>
                 <div class="max-w-md mx-auto">
                     <div id="b-kembali" class="hidden flex justify-between items-center bg-[#131314] border border-[#4b5563] rounded-lg p-1.5 px-3 mb-2 transition-all"><span class="text-[10px] font-bold text-white uppercase">Kembali</span><span id="t-kembali" class="text-sm font-black text-white">Rp 0</span></div>
@@ -193,7 +193,7 @@
         function saveData() { localStorage.setItem(KEY, JSON.stringify(db)); localStorage.setItem('BARLA_CART', JSON.stringify(cart)); refreshDL(); if (!document.getElementById('section-stok').classList.contains('hidden')) renderStok(curTab); }
         function formatRupiah(el) { let v = el.value.replace(/[^0-9]/g, ""); el.value = v ? new Intl.NumberFormat('id-ID').format(v) : ""; if (el.id === 'i-bayar') updateChange(); }
         function clean(s) { return parseInt(s.toString().replace(/[^0-9]/g, "")) || 0; }
-        function refreshClock() { const opt = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }; document.getElementById('h-time').innerText = new Date().toLocaleDateString('id-ID', opt).replace(/\./g, ':'); }
+        function refreshClock() { const optD = { day: '2-digit', month: 'short', year: 'numeric' }; const optT = { hour: '2-digit', minute: '2-digit', hour12: false }; const now = new Date(); const tgl = now.toLocaleDateString('id-ID', optD); const jam = now.toLocaleTimeString('id-ID', optT).replace(/\./g, ':'); document.getElementById('h-time').innerHTML = `<span class="font-normal">${tgl}</span> | <span class="text-[#ff0000] font-black">${jam}</span>`; }
         function getTglStr() { return new Date().toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); }
         function getJamStr() { return new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'}).replace(/\./g, ':'); }
 
@@ -349,7 +349,7 @@
             document.getElementById('modal-history').style.display = 'flex';
         }
         function tutupHistory() { document.getElementById('modal-history').style.display = 'none'; }
-        function hapusHistory() { openModal("HAPUS", "", "Bersihkan semua riwayat?", () => { db.history = []; saveData(); bukaHistory(); }, "confirm"); }
+        function hapusHistory() { openModal("HAPUS?", "", "Bersihkan semua riwayat?", () => { db.history = []; saveData(); bukaHistory(); }, "confirm"); }
         function cetakUlang(id) {
             const trx = db.history.find(x => x.id === id); if (!trx) return;
             const [tgl, jam] = trx.waktu.split(' ');
@@ -373,8 +373,8 @@
             if (t === 'sup') {
                 if (db.supplier.length === 0) c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>";
                 else db.supplier.forEach((s, i) => {
-                    let bl = ""; s.barang.forEach((b, bi) => bl += `<div class="flex justify-between items-center py-2.5 border-b border-[#2b2d31] border-dashed"><div><b class="text-xs text-white">${escapeHTML(b.nama)}</b><br><span class="text-[#3b82f6] text-[10px]">Rp ${b.harga.toLocaleString('id-ID')} | ${escapeHTML(b.bc) || '-'}</span></div><div class="flex items-center gap-3"><b class="text-sm text-white">${b.stok}</b><button onclick="openSheet('sup', ${i}, ${bi})" class="text-white hover:text-white text-lg px-2">⋮</button></div></div>`);
-                    c.innerHTML += `<div class="bg-[#1e1f22] rounded-2xl border border-[#2b2d31] p-4 mb-3 shadow-sm"><div class="flex justify-between items-center" onclick="openIdx=(openIdx===${i}?null:${i});matikanKamera();renderStok('sup')"><b class="uppercase text-[#ffd700] text-sm">${escapeHTML(s.nama)}</b><button onclick="event.stopPropagation();openSheet('head', ${i})" class="text-white hover:text-white px-2 font-bold text-lg">⋮</button></div><div class="${openIdx===i?'':'hidden'} mt-3 space-y-2 relative">
+                    let bl = ""; s.barang.forEach((b, bi) => bl += `<div class="flex justify-between items-center py-2.5 border-b border-[#2b2d31] border-dashed"><div><b class="text-xs text-white">${escapeHTML(b.nama)}</b><br><span class="text-[#3b82f6] text-[10px]">Rp ${b.harga.toLocaleString('id-ID')} | <span class="text-[#94a3b8]">${escapeHTML(b.bc) || '-'}</span></span></div><div class="flex items-center gap-3"><b class="text-sm text-white">${b.stok}</b><button onclick="openSheet('sup', ${i}, ${bi})" class="text-white hover:text-white text-lg px-2">⋮</button></div></div>`);
+                    c.innerHTML += `<div class="bg-[#1e1f22] rounded-2xl border border-[#2b2d31] p-4 mb-3 shadow-sm"><div class="flex justify-between" onclick="openIdx=(openIdx===${i}?null:${i});matikanKamera();renderStok('sup')"><b class="uppercase text-[#ffd700] text-sm">${escapeHTML(s.nama)}</b><button onclick="event.stopPropagation();openSheet('head', ${i})" class="text-white hover:text-white px-2 font-bold text-lg">⋮</button></div><div class="${openIdx===i?'':'hidden'} mt-3 space-y-2 relative">
                         <div class="flex gap-2"><input id="ib-n-${i}" placeholder="NAMA BARANG" class="flex-1 p-3 rounded-xl text-xs outline-none"><button onclick="bukaKameraPopup('ib-bc-${i}')" class="active:scale-75 transition bg-[#2b2d31] rounded-xl px-2"><div class="premium-scan w-7 h-7 border-2 border-white"></div></button></div>
                         <input id="ib-bc-${i}" inputmode="numeric" placeholder="BARCODE" class="w-full p-3 rounded-xl text-xs outline-none">
                         <div class="flex gap-2"><input id="ib-h-${i}" inputmode="numeric" oninput="formatRupiah(this)" placeholder="HARGA" class="w-1/2 p-3 rounded-xl text-xs outline-none"><input id="ib-s-${i}" inputmode="numeric" type="number" placeholder="STOK" class="w-1/2 p-3 rounded-xl text-xs outline-none"></div>
@@ -383,10 +383,10 @@
             } else if (t === 'retur') {
                 const g = db.retur.reduce((a, r) => { (a[r.sup] = a[r.sup] || []); a[r.sup].push(r); return a; }, {});
                 if (Object.keys(g).length === 0) c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>";
-                else { c.innerHTML = `<button onclick="printReturSemua()" class="w-full bg-[#3b82f6] hover:opacity-80 text-white py-3 rounded-xl font-black text-xs uppercase mb-4 shadow-md">Print Semua Retur</button>`; for (let s in g) { let its = ""; g[s].forEach(r => its += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between text-white"><span>• ${escapeHTML(r.nama)}</span><b class="text-[#ff0000]">${r.qty} Pcs</b></div>`); c.innerHTML += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-center mb-2"><b class="uppercase text-[#ffd700] text-sm">${escapeHTML(s)}</b><button onclick="openSheet('retur', '${escapeHTML(s)}')" class="text-white hover:text-white text-lg px-2">⋮</button></div>${its}</div>`; } }
+                else { c.innerHTML = `<button onclick="printReturSemua()" class="w-full bg-[#3b82f6] hover:opacity-80 text-white py-3 rounded-xl font-black text-xs uppercase mb-4 shadow-md">Print Semua Retur</button>`; for (let s in g) { let its = ""; g[s].forEach(r => its += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-center text-white"><span>• ${escapeHTML(r.nama)}</span><b>${r.qty} Pcs</b></div>`); c.innerHTML += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-center mb-2"><b class="uppercase text-[#ffd700] text-sm">${escapeHTML(s)}</b><button onclick="openSheet('retur', '${escapeHTML(s)}')" class="text-white hover:text-white text-lg px-2">⋮</button></div>${its}</div>`; } }
             } else if (t === 'lap') {
                 let has = false; let lapH = `<button onclick="printLapSemua()" class="w-full bg-[#3b82f6] hover:opacity-80 text-white py-3 rounded-xl font-black text-xs uppercase mb-4 shadow-md">Print Laporan Stok</button>`;
-                db.supplier.forEach((s, i) => { let k = s.barang.filter(x => x.stok < 30); if (k.length > 0) { has = true; let bl = ""; k.forEach(b => bl += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between text-white"><span>• ${escapeHTML(b.nama)}</span><b class="text-[#ff0000]">${b.stok}</b></div>`); lapH += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between mb-2"><b class="uppercase text-[#ffd700] text-sm">${escapeHTML(s.nama)}</b><button onclick="openSheet('lap', ${i})" class="text-white hover:text-white text-lg px-2">⋮</button></div>${bl}</div>`; } });
+                db.supplier.forEach((s, i) => { let k = s.barang.filter(x => x.stok < 30); if (k.length > 0) { has = true; let bl = ""; k.forEach(b => bl += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-center text-white"><span>• ${escapeHTML(b.nama)}</span><b class="text-[#ff0000]">${b.stok}</b></div>`); lapH += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-center mb-2"><b class="uppercase text-[#ffd700] text-sm">${escapeHTML(s.nama)}</b><button onclick="openSheet('lap', ${i})" class="text-white hover:text-white text-lg px-2">⋮</button></div>${bl}</div>`; } });
                 c.innerHTML = has ? lapH : "<div class='text-center py-20 font-black text-white uppercase'>Stok Aman</div>";
             }
         }
@@ -409,7 +409,7 @@
                 db.supplier[selS].barang[selB].bc = v.trim(); saveData(); 
             }, "prompt", "text", true);
             if (type === 'retur') openModal("RETUR", "", brg.nama, (v) => { let q = Math.abs(parseInt(v))||0; if(q<=0||q>brg.stok) return openModal("GAGAL","","Jumlah tidak valid!",null,"alert"); db.supplier[selS].barang[selB].stok -= q; let ada = db.retur.find(r=>r.sup===db.supplier[selS].nama && r.nama===brg.nama); if(ada) ada.qty+=q; else db.retur.push({sup:db.supplier[selS].nama, nama:brg.nama, qty:q}); cart=[]; saveData(); }, "prompt", "numeric");
-            if (type === 'hapus') openModal("YAKIN?", "", `Hapus ${brg.nama}?`, () => { db.retur=db.retur.filter(r=>!(r.sup===db.supplier[selS].nama && r.nama===brg.nama)); cart=[]; db.supplier[selS].barang.splice(selB,1); saveData(); }, "confirm");
+            if (type === 'hapus') openModal("HAPUS?", "", `Hapus ${brg.nama}?`, () => { db.retur=db.retur.filter(r=>!(r.sup===db.supplier[selS].nama && r.nama===brg.nama)); cart=[]; db.supplier[selS].barang.splice(selB,1); saveData(); }, "confirm");
         }
 
         function editSupplier(i) { closeSheet(); let old = db.supplier[i].nama; openModal("EDIT SUPPLIER", old, "", (v) => { let n = v.trim(); if(!n||db.supplier.some(s=>s.nama.toUpperCase()===n.toUpperCase() && s.nama!==old)) return openModal("GAGAL","","Nama sudah ada!",null,"alert"); db.retur.forEach(r=>{if(r.sup===old) r.sup=n;}); db.supplier[i].nama = n; saveData(); }, "prompt"); }
@@ -430,7 +430,7 @@
             const m = document.getElementById('b-modal'), inpBox = document.getElementById('m-input-box'), inp = document.getElementById('m-input'), btnC = document.getElementById('m-cancel'), btnOk = document.getElementById('m-confirm'), btnS = document.getElementById('m-scan-btn');
             document.getElementById('m-title').innerText = t; document.getElementById('m-desc').innerText = d; inp.value = v; inp.inputMode = type==="numeric"?"numeric":"text";
             inpBox.style.display = (mode==='prompt')?'flex':'none'; btnC.style.display = (mode!=='alert')?'block':'none'; btnS.style.display = withScan?'block':'none';
-            btnOk.className = (t.includes("HAPUS")||t.includes("GAGAL")) ? "flex-1 py-3 bg-[#ff0000] text-white rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition" : "flex-1 py-3 bg-[#3b82f6] text-white rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition";
+            btnOk.className = (t.includes("HAPUS?")||t.includes("GAGAL")) ? "flex-1 py-3 bg-[#ff0000] text-white rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition" : "flex-1 py-3 bg-[#3b82f6] text-white rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition";
             btnS.onclick = () => bukaKameraPopup('modal');
             btnOk.onclick = () => { if(cb) mode==='prompt'?cb(inp.value):cb(); closeModal(); };
             m.style.display = 'flex'; if(mode==='prompt') setTimeout(()=>inp.focus(),300);
@@ -461,7 +461,7 @@
         function printLapSemua() { let h = `<div class="text-center bold" style="font-size:12pt">LAPORAN STOK TIPIS</div><div class="line"></div>`; let has = false; db.supplier.forEach(s=>{ const k=s.barang.filter(b=>b.stok<30); if(k.length>0){ has=true; h+=`<div class="bold uppercase mt-2">[ ${escapeHTML(s.nama)} ]</div><table>`; k.forEach(b=>h+=`<tr><td>• ${escapeHTML(b.nama)}</td><td class="text-right">Sisa: ${b.stok}</td></tr>`); h+=`</table><div class="line"></div>`; } }); if(!has) return openModal("AMAN","","Semua stok masih cukup.",null,"alert"); document.getElementById('p-konten').innerHTML=h; window.print(); }
         function waR(sn) { let m = `*RETUR BARANG*\n(${getTglStr()})\n\n*${sn.toUpperCase()}*\n`; db.retur.filter(x=>x.sup===sn).forEach(r=>m+=`• ${r.nama} : ${r.qty} pcs\n`); window.open(`https://wa.me/?text=${encodeURIComponent(m)}`); }
         function waO(i) { let s=db.supplier[i], m=`*ORDER*\n(${getTglStr()})\n\n*${s.nama.toUpperCase()}*\n`; s.barang.filter(b=>b.stok<30).forEach(b=>m+=`• ${b.nama} : \n`); window.open(`https://wa.me/?text=${encodeURIComponent(m)}`); }
-        function trHR(sn) { openModal("HAPUS", "", `Data retur ${sn} dihapus?`, () => { db.retur=db.retur.filter(x=>x.sup!==sn); saveData(); renderStok('retur'); }, "confirm"); }
+        function trHR(sn) { openModal("HAPUS?", "", `Data retur ${sn} dihapus?`, () => { db.retur=db.retur.filter(x=>x.sup!==sn); saveData(); renderStok('retur'); }, "confirm"); }
     </script>
 
     <script>
