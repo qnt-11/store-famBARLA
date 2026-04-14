@@ -1,8 +1,10 @@
-const CACHE_NAME = "barla-store-v21.0";
+const CACHE_NAME = "kasir-barla-v23.0";
 const urlsToCache = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "https://cdn-icons-png.flaticon.com/512/3514/3514491.png",
+  "https://unpkg.com/html5-qrcode"
 ];
 
 self.addEventListener("install", event => {
