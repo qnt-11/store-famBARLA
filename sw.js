@@ -1,4 +1,4 @@
-const CACHE_NAME = "barla-store-v17.9";
+const CACHE_NAME = "barla-store-v18.0-premium";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -11,6 +11,22 @@ self.addEventListener("install", event => {
       return cache.addAll(urlsToCache);
     })
   );
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
