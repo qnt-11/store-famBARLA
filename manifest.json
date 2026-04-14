@@ -8,9 +8,9 @@
   "theme_color": "#1e3a8a",
   "icons": [
     {
-      "src": "https://img.icons8.com/ios-filled/512/barcode-scanner.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNMTAwIDEwMHY2MGgzMHYtMzBoMzB2LTMwaC02ME00MTIgMTAwdjYwaC0zMHYtMzBoLTMwdi0zMGg2ME0xMDAgNDEydi02MGgzMHYzMGgzMHYzMGgtNjBNNDEyIDQxMnYtNjBoLTMwdjMwaC0zMHYzMGg2MCIgZmlsbD0iYmxhY2siLz48cGF0aCBkPSJNMTQwIDE4MGgzMHYxNTJoLTMwek0xOTAgMTgwaDUwdjE1MmgtNTB6TTI2MCAxODBoMjB2MTUyaC0yMHpNMzAwIDE4MGg2MHYxNTJoLTYwek0zODAgMTgwaDIydjE1MmgtMjJ6IiBmaWxsPSJibGFjayIvPjwvc3ZnPg==",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
