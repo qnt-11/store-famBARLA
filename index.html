@@ -448,11 +448,11 @@
             let tStr = `${trx.waktu.replace('-', ' - ')}`.padStart(31, ' ');
             h += `${tStr}\n-------------------------------\n`;
             trx.items.forEach(i => {
-                let nm = i.nama.substring(0, 13).padEnd(14, ' ');
-                let q = i.qty.toString().padStart(2, ' ');
+                let q = i.qty.toString().padEnd(3, ' ');
+                let nm = escapeHTML(i.nama).substring(0, 12).padEnd(12, ' ');
                 let pr = i.harga.toString().padStart(6, ' ');
-                let sub = (i.harga * i.qty).toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ');
-                h += `${nm}${q}${pr}${sub}\n`;
+                let sub = (i.harga * i.qty).toLocaleString('id-ID').replace(/\./g, '.').padStart(10, ' ');
+                h += `${q}${nm}${pr}${sub}\n`;
             });
             h += `-------------------------------\n`;
             h += `TOTAL`.padEnd(22, ' ') + trx.total.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
@@ -497,7 +497,10 @@
             document.getElementById('h-kasir').classList.toggle('hidden', m!=='kasir'); 
             document.getElementById('h-stok').classList.toggle('hidden', m!=='stok'); 
             ['n-k','n-s'].forEach(id => document.getElementById(id).classList.toggle('active-nav', id===(m==='kasir'?'n-k':'n-s'))); 
-            if(m==='stok') tab(curTab); 
+            
+            // RESET PENCARIAN STOK KETIKA MENU KASIR DIBUKA
+            if (m === 'kasir') { toggleStokSearch(false); }
+            if (m === 'stok') { tab(curTab); } 
         }
         function tab(t) { 
             openIdx = null; matikanKamera(); curTab = t; 
