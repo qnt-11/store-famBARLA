@@ -21,13 +21,7 @@
             body * { display: none !important; }
             #areaStruk, #areaStruk * { display: block !important; visibility: visible !important; }
             #areaStruk { position: absolute; left: 0; top: 0; width: 48mm; font-size: 8pt; line-height: 1.3; color: #000; font-family: monospace; background: white; }
-            .line { border-bottom: 1px dashed black; margin: 5px 0; }
-            .text-center { text-align: center; }
-            .text-right { text-align: right; }
-            .bold { font-weight: bold; }
-            .uppercase { text-transform: uppercase; }
-            table { width: 100%; border-collapse: collapse; }
-            td { vertical-align: top; padding-bottom: 2px; }
+            pre { font-family: monospace; white-space: pre-wrap; font-size: 9pt; line-height: 1.2; margin: 0; padding: 0; }
         }
         .tab-active { background: #2b2d31; color: white !important; }
         .sheet-bg { background: rgba(0, 0, 0, 0.85); z-index: 1000; position: fixed; inset: 0; display: none; align-items: flex-end; }
@@ -161,7 +155,7 @@
         <div class="bg-[#1e1f22] w-full max-w-xs rounded-3xl p-6 shadow-2xl space-y-4 border-t-[8px]" id="m-border">
             <h3 id="m-title" class="font-black text-white text-center uppercase text-lg italic"></h3>
             <p id="m-desc" class="text-[11px] text-white font-bold text-center uppercase whitespace-pre-wrap"></p>
-            <div id="m-input-box" style="display:none;" class="flex gap-2 items-center rounded-xl border-2">
+            <div id="m-input-box" style="display:none;" class="flex gap-2 items-center rounded-2xl border-2">
                 <input type="text" id="m-input" oninput="handleModalInput(this)" class="flex-1 w-0 p-3 bg-transparent border-none text-center text-xl font-black outline-none text-white">
                 <button id="m-scan-btn" style="display:none;" class="w-12 h-12 shrink-0 bg-transparent flex items-center justify-center active:scale-90 transition pr-2"><div class="premium-scan w-8 h-8 border border-white rounded-md"></div></button>
             </div>
@@ -173,8 +167,8 @@
     </div>
 
     <nav class="fixed bottom-0 w-full bg-[#131314] border-t border-[#2b2d31] flex justify-around no-print z-50">
-        <button onclick="mode('kasir')" id="n-k" class="nav-btn active-nav"><i class="fas fa-store"></i><span>Kasir</span></button>
-        <button onclick="mode('stok')" id="n-s" class="nav-btn"><i class="fas fa-box-open"></i><span>Stok</span></button>
+        <button onclick="navMode('kasir')" id="n-k" class="nav-btn active-nav"><i class="fas fa-store"></i><span>Kasir</span></button>
+        <button onclick="navMode('stok')" id="n-s" class="nav-btn"><i class="fas fa-box-open"></i><span>Stok</span></button>
     </nav>
     <div id="areaStruk" class="hidden"><div id="p-konten"></div></div>
 
@@ -195,8 +189,14 @@
                 if (savedCart) cart = JSON.parse(savedCart);
             } catch(e) { db = { supplier: [], retur: [], history: [] }; }
             html5QrCode = new Html5Qrcode("scanner-modal-layer");
-            refreshClock(); setInterval(refreshClock, 60000); refreshDL(); renderStok('sup'); renderCart();
+            refreshClock(); setInterval(refreshClock, 60000); refreshDL(); renderCart();
             setupScannerEvents();
+            
+            let savedMode = localStorage.getItem('BARLA_LAST_MODE') || 'kasir';
+            let savedTab = localStorage.getItem('BARLA_LAST_TAB') || 'sup';
+            curTab = savedTab;
+            mode(savedMode);
+            if(savedMode !== 'stok') renderStok(curTab);
         };
 
         function toggleMenu(menuId) {
@@ -217,7 +217,7 @@
             try {
                 const res = await fetch(CLOUD_URL, { method: 'POST', body: JSON.stringify(db), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
                 const result = await res.json();
-                if(result.status === 'success') openModal("SUKSES", "", "Data toko berhasil diamankan di Google Sheets!", null, "alert");
+                if(result.status === 'success') openModal("SUKSES", "", "BACKUP DI GOOGLE SHEETS!", () => {}, "alert");
                 else throw new Error();
             } catch(e) { openModal("GAGAL", "", "Koneksi ke Google Sheets gagal.", null, "alert"); }
         }
@@ -227,7 +227,10 @@
             try {
                 const res = await fetch(CLOUD_URL);
                 const data = await res.json();
-                if(data && data.supplier) { db = data; saveData(); openModal("SUKSES", "", "Data berhasil di-restore!", () => location.reload(), "alert"); }
+                if(data && data.supplier) { 
+                    db = data; saveData(); 
+                    openModal("SUKSES", "", "LOAD GOOGLE SHEETS!", () => { renderStok(curTab); refreshDL(); }, "alert"); 
+                }
                 else openModal("GAGAL", "", "Data Cloud kosong.", null, "alert");
             } catch(e) { openModal("GAGAL", "", "Gagal mengambil data.", null, "alert"); }
         }
@@ -250,7 +253,7 @@
         function formatRupiah(el) { let v = el.value.replace(/[^0-9]/g, ""); el.value = v ? new Intl.NumberFormat('id-ID').format(v) : ""; if (el.id === 'i-bayar') updateChange(); }
         function clean(s) { return parseInt(s.toString().replace(/[^0-9]/g, "")) || 0; }
         function refreshClock() { const optD = { day: '2-digit', month: 'short', year: 'numeric' }; const optT = { hour: '2-digit', minute: '2-digit', hour12: false }; const now = new Date(); const tgl = now.toLocaleDateString('id-ID', optD); const jam = now.toLocaleTimeString('id-ID', optT).replace(/\./g, ':'); document.getElementById('h-time').innerHTML = `<span class="text-white">${tgl}</span> <span class="text-[#ff0000] font-black ml-1">${jam}</span>`; }
-        function getTglStr() { return new Date().toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); }
+        function getTglStr() { return new Date().toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: '2-digit'}).replace(/\//g, '.'); }
         function getJamStr() { return new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'}).replace(/\./g, ':'); }
 
         async function matikanKamera() { if (isScanning && html5QrCode) { try { const state = html5QrCode.getState(); if (state === 2) await html5QrCode.stop(); } catch(e) {} isScanning = false; } document.getElementById('modal-kamera').style.display = 'none'; }
@@ -316,6 +319,7 @@
 
         function renderCart() {
             const l = document.getElementById('list-cart'); l.innerHTML = ""; let tot = 0;
+            if (cart.length === 0) document.getElementById('i-bayar').value = "";
             cart.forEach((k, i) => {
                 let sub = k.harga * k.qty; tot += sub;
                 l.innerHTML += `
@@ -352,8 +356,22 @@
         }
 
         function updateChange() {
-            const t = cart.reduce((s, i) => s + (i.harga * i.qty), 0), b = clean(document.getElementById('i-bayar').value), box = document.getElementById('b-kembali');
-            if (b >= t && t > 0) { box.classList.remove('hidden'); document.getElementById('t-kembali').innerText = "Rp " + (b-t).toLocaleString('id-ID'); } else box.classList.add('hidden');
+            const t = cart.reduce((s, i) => s + (i.harga * i.qty), 0);
+            const bStr = document.getElementById('i-bayar').value;
+            const b = bStr ? clean(bStr) : 0;
+            const box = document.getElementById('b-kembali');
+
+            if (cart.length > 0 && bStr !== "") {
+                box.classList.remove('hidden');
+                let diff = b - t;
+                if (diff < 0) {
+                    document.getElementById('t-kembali').innerText = "-Rp " + Math.abs(diff).toLocaleString('id-ID');
+                } else {
+                    document.getElementById('t-kembali').innerText = "Rp " + diff.toLocaleString('id-ID');
+                }
+            } else {
+                box.classList.add('hidden');
+            }
         }
 
         function checkout(tipe) {
@@ -370,7 +388,7 @@
                 }
             })); });
             const trxId = Date.now();
-            db.history.unshift({ id: trxId, waktu: `${getTglStr()} ${getJamStr()}`, items: JSON.parse(JSON.stringify(cart)), total: t, bayar: b, kembali: b-t });
+            db.history.unshift({ id: trxId, waktu: `${getTglStr()}-${getJamStr()}`, items: JSON.parse(JSON.stringify(cart)), total: t, bayar: b, kembali: b-t });
             if (db.history.length > 50) db.history.pop();
             if (tipe === 'print') cetakUlang(trxId); else if (tipe === 'wa') waUlang(trxId);
             cart = []; document.getElementById('i-bayar').value = ""; saveData(); renderCart(); refreshDL();
@@ -381,7 +399,7 @@
             if (db.history.length === 0) list.innerHTML = `<div class='text-center py-10 font-bold text-white'>BELUM ADA RIWAYAT</div>`;
             else db.history.forEach(trx => {
                 let itms = ''; trx.items.forEach(i => itms += `<div class="flex justify-between text-[10px] text-white mt-1"><span>${i.qty}x ${escapeHTML(i.nama)}</span><span>Rp ${(i.qty*i.harga).toLocaleString('id-ID')}</span></div>`);
-                list.innerHTML += `<div class="border border-[#2b2d31] rounded-xl p-3 bg-[#131314] mb-3"><div class="flex justify-between mb-2 pb-2 border-b border-[#2b2d31]"><span class="text-[9px] font-bold text-white">${trx.waktu}</span><span class="text-xs font-black text-[#3b82f6]">Rp ${trx.total.toLocaleString('id-ID')}</span></div>${itms}
+                list.innerHTML += `<div class="border border-[#2b2d31] rounded-xl p-3 bg-[#131314] mb-3"><div class="flex justify-between mb-2 pb-2 border-b border-[#2b2d31]"><span class="text-[9px] font-bold text-white">${trx.waktu.replace('-', ' ')}</span><span class="text-xs font-black text-[#3b82f6]">Rp ${trx.total.toLocaleString('id-ID')}</span></div>${itms}
                     <div class="flex gap-2 mt-2 pt-2 border-t border-[#2b2d31]"><button onclick="waUlang(${trx.id})" class="flex-1 bg-[#1e1f22] border border-[#25D366] text-[#25D366] py-1.5 rounded-lg text-[9px] font-bold uppercase"><i class="fab fa-whatsapp"></i> WA</button><button onclick="cetakUlang(${trx.id})" class="flex-1 bg-[#1e1f22] border border-[#3b82f6] text-[#3b82f6] py-1.5 rounded-lg text-[9px] font-bold uppercase"><i class="fas fa-print"></i> Cetak</button></div></div>`;
             });
             document.getElementById('modal-history').style.display = 'flex';
@@ -391,21 +409,67 @@
 
         function cetakUlang(id) {
             const trx = db.history.find(x => x.id === id); if (!trx) return;
-            const [tgl, jam] = trx.waktu.split(' ');
-            let itemsHtml = "<table>"; trx.items.forEach(i => itemsHtml += `<tr><td colspan="2" class="bold uppercase">${escapeHTML(i.nama)}</td></tr><tr><td>${i.qty} x ${i.harga.toLocaleString('id-ID')}</td><td class="text-right">${(i.harga*i.qty).toLocaleString('id-ID')}</td></tr>`);
-            document.getElementById('p-konten').innerHTML = `<div class="text-center bold" style="font-size:11pt">BARLA STORE</div><div class="text-center" style="font-size:8pt">0822-2633-4999</div><div class="line"></div><table><tr><td class="text-right">${tgl}</td></tr><tr><td class="text-right">${jam}</td></tr></table><div class="line"></div>${itemsHtml}<div class="line"></div><table class="bold"><tr><td>Total</td><td class="text-right">${trx.total.toLocaleString('id-ID')}</td></tr><tr><td>Bayar</td><td class="text-right">${trx.bayar.toLocaleString('id-ID')}</td></tr><tr><td>Kembali</td><td class="text-right">${trx.kembali.toLocaleString('id-ID')}</td></tr></table><div class="line"></div><div class="text-center bold">Terimakasih</div>`;
+            let h = `          BARLA STORE           \n      Ps. Sunggingan Lt. 2      \n         0822-2633-4999         \n--------------------------------\n`;
+            let tStr = `${trx.waktu}`.padEnd(21, ' ') + `KASIR TR/01`;
+            h += `${tStr}\n--------------------------------\n`;
+            trx.items.forEach(i => {
+                let nm = escapeHTML(i.nama).substring(0, 13).padEnd(13, ' ');
+                let q = i.qty.toString().padStart(2, ' ');
+                let pr = i.harga.toString().padStart(5, ' ');
+                let sub = (i.harga * i.qty).toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ');
+                h += `${nm} ${q} ${pr} ${sub}\n`;
+            });
+            h += `--------------------------------\n`;
+            h += `TOTAL`.padEnd(23, ' ') + trx.total.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
+            h += `BAYAR`.padEnd(23, ' ') + trx.bayar.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
+            h += `KEMBALIAN`.padEnd(23, ' ') + trx.kembali.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
+            h += `--------------------------------\n          Terimakasih`;
+            document.getElementById('p-konten').innerHTML = `<pre>${h}</pre>`;
             window.print();
         }
         function waUlang(id) {
             const trx = db.history.find(x => x.id === id); if (!trx) return;
-            let m = `*BARLA STORE*\n0822-2633-4999\n--------------------------------\nTgl: ${trx.waktu}\n--------------------------------\n`;
-            trx.items.forEach(i => m += `*${i.nama.toUpperCase()}*\n${i.qty} x ${i.harga.toLocaleString('id-ID')} = ${(i.qty*i.harga).toLocaleString('id-ID')}\n\n`);
-            m += `--------------------------------\n*Total: Rp ${trx.total.toLocaleString('id-ID')}*\n*Bayar: Rp ${trx.bayar.toLocaleString('id-ID')}*\n*Kembali: Rp ${trx.kembali.toLocaleString('id-ID')}*\n--------------------------------\nTerimakasih`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
+            let h = `          BARLA STORE           \n      Ps. Sunggingan Lt. 2      \n         0822-2633-4999         \n--------------------------------\n`;
+            let tStr = `${trx.waktu}`.padEnd(21, ' ') + `KASIR TR/01`;
+            h += `${tStr}\n--------------------------------\n`;
+            trx.items.forEach(i => {
+                let nm = i.nama.substring(0, 13).padEnd(13, ' ');
+                let q = i.qty.toString().padStart(2, ' ');
+                let pr = i.harga.toString().padStart(5, ' ');
+                let sub = (i.harga * i.qty).toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ');
+                h += `${nm} ${q} ${pr} ${sub}\n`;
+            });
+            h += `--------------------------------\n`;
+            h += `TOTAL`.padEnd(23, ' ') + trx.total.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
+            h += `BAYAR`.padEnd(23, ' ') + trx.bayar.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
+            h += `KEMBALIAN`.padEnd(23, ' ') + trx.kembali.toLocaleString('id-ID').replace(/\./g, '.').padStart(9, ' ') + `\n`;
+            h += `--------------------------------\n          Terimakasih`;
+            let finalStr = "```text\n" + h + "\n```";
+            window.open(`https://wa.me/?text=${encodeURIComponent(finalStr)}`);
         }
 
-        function mode(m) { openIdx = null; matikanKamera(); document.getElementById('section-kasir').classList.toggle('hidden', m!=='kasir'); document.getElementById('section-stok').classList.toggle('hidden', m!=='stok'); document.getElementById('h-kasir').classList.toggle('hidden', m!=='kasir'); document.getElementById('h-stok').classList.toggle('hidden', m!=='stok'); ['n-k','n-s'].forEach(id => document.getElementById(id).classList.toggle('active-nav', id===(m==='kasir'?'n-k':'n-s'))); if(m==='stok') tab(curTab); }
-        function tab(t) { openIdx = null; matikanKamera(); curTab = t; ['sup','retur','lap'].forEach(id => document.getElementById('b-'+id).classList.toggle('tab-active', id===t)); document.getElementById('fab').style.display = (t==='sup')?'flex':'none'; renderStok(t); }
+        function navMode(m) {
+            if (m === 'stok') curTab = 'sup';
+            mode(m);
+        }
+
+        function mode(m) { 
+            openIdx = null; matikanKamera(); 
+            localStorage.setItem('BARLA_LAST_MODE', m);
+            document.getElementById('section-kasir').classList.toggle('hidden', m!=='kasir'); 
+            document.getElementById('section-stok').classList.toggle('hidden', m!=='stok'); 
+            document.getElementById('h-kasir').classList.toggle('hidden', m!=='kasir'); 
+            document.getElementById('h-stok').classList.toggle('hidden', m!=='stok'); 
+            ['n-k','n-s'].forEach(id => document.getElementById(id).classList.toggle('active-nav', id===(m==='kasir'?'n-k':'n-s'))); 
+            if(m==='stok') tab(curTab); 
+        }
+        function tab(t) { 
+            openIdx = null; matikanKamera(); curTab = t; 
+            localStorage.setItem('BARLA_LAST_TAB', t);
+            ['sup','retur','lap'].forEach(id => document.getElementById('b-'+id).classList.toggle('tab-active', id===t)); 
+            document.getElementById('fab').style.display = (t==='sup')?'flex':'none'; 
+            renderStok(t); 
+        }
 
         function renderStok(t) {
             const c = document.getElementById('stok-content'); c.innerHTML = "";
@@ -428,8 +492,8 @@
 
         function openSheet(type, i1, i2) {
             const s = document.getElementById('a-sheet'), o = document.getElementById('sheet-opts'); s.style.display = 'flex'; o.innerHTML = ""; setTimeout(() => s.classList.add('sheet-active'), 10);
-            if (type === 'sup') { selS = i1; selB = i2; o.innerHTML = `<button onclick="action('stok')" class="p-3.5 bg-[#2b2d31] text-[#3b82f6] rounded-xl font-bold text-sm border border-[#3b82f6]">Edit Stok</button><button onclick="action('harga')" class="p-3.5 bg-[#2b2d31] text-[#3b82f6] rounded-xl font-bold text-sm border border-[#3b82f6]">Edit Harga</button><button onclick="action('barcode')" class="p-3.5 bg-[#2b2d31] text-[#ffffff] rounded-xl font-bold text-sm border border-[#ffffff]">Scan / Edit Barcode</button><button onclick="action('retur')" class="p-3.5 bg-[#2b2d31] text-yellow-400 rounded-xl font-bold text-sm border border-yellow-400">Retur Barang</button><button onclick="action('hapus')" class="p-3.5 bg-[#2b2d31] text-[#ff0000] rounded-xl font-bold text-sm border border-[#ff0000]">Hapus Barang</button>`; }
-            else if (type === 'head') { selS = i1; o.innerHTML = `<button onclick="editSupplier(${i1})" class="p-3.5 bg-[#2b2d31] text-[#3b82f6] rounded-xl font-bold text-sm border border-[#3b82f6]">Edit Nama Supplier</button><button onclick="delSup('${db.supplier[i1].nama}')" class="p-3.5 bg-[#2b2d31] text-[#ff0000] rounded-xl font-bold text-sm border border-[#ff0000]">Hapus Supplier</button>`; }
+            if (type === 'sup') { selS = i1; selB = i2; o.innerHTML = `<button onclick="action('stok')" class="p-3.5 bg-[#2b2d31] text-[#3b82f6] rounded-xl font-bold text-sm border border-[#3b82f6]">Edit Stok</button><button onclick="action('harga')" class="p-3.5 bg-[#2b2d31] text-[#3b82f6] rounded-xl font-bold text-sm border border-[#3b82f6]">Edit Harga</button><button onclick="action('barcode')" class="p-3.5 bg-[#2b2d31] text-[#ffffff] rounded-xl font-bold text-sm border border-[#ffffff]">Scan / Edit Barcode</button><button onclick="action('retur')" class="p-3.5 bg-[#2b2d31] text-[#facc15] rounded-xl font-bold text-sm border border-[#facc15]">Retur Barang</button><button onclick="action('hapus')" class="p-3.5 bg-[#2b2d31] text-[#ff0000] rounded-xl font-bold text-sm border border-[#ff0000]">Hapus Barang</button>`; }
+            else if (type === 'head') { selS = i1; o.innerHTML = `<button onclick="editSupplier(${i1})" class="p-3.5 bg-[#2b2d31] text-[#ffd700] rounded-xl font-bold text-sm border border-[#ffd700]">Edit Nama Supplier</button><button onclick="delSup('${db.supplier[i1].nama}')" class="p-3.5 bg-[#2b2d31] text-[#ff0000] rounded-xl font-bold text-sm border border-[#ff0000]">Hapus Supplier</button>`; }
             else if (type === 'retur') { selRetur = i1; o.innerHTML = `<button onclick="closeSheet();waR(selRetur)" class="p-3.5 bg-[#2b2d31] text-[#25D366] rounded-xl font-bold text-sm border border-[#25D366]">WhatsApp Retur</button><button onclick="closeSheet();printReturSup(selRetur)" class="p-3.5 bg-[#2b2d31] text-[#3b82f6] rounded-xl font-bold text-sm border border-[#3b82f6]">Print Struk Retur</button><button onclick="closeSheet();trHR(selRetur)" class="p-3.5 bg-[#2b2d31] text-[#ff0000] rounded-xl font-bold text-sm border border-[#ff0000]">Hapus Data Retur</button>`; }
             else if (type === 'lap') o.innerHTML = `<button onclick="closeSheet();waO(${i1})" class="p-3.5 bg-[#2b2d31] text-[#25D366] rounded-xl font-bold text-sm border border-[#25D366]">WhatsApp Order</button>`;
         }
@@ -468,14 +532,16 @@
             inpBox.style.display = (mode==='prompt')?'flex':'none'; btnC.style.display = (mode!=='alert')?'block':'none'; btnS.style.display = withScan?'flex':'none';
             
             let btnColor = "bg-[#3b82f6]"; let textColor = "text-white"; let bColor = "#3b82f6";
+            
             if (t.includes("HAPUS?")) { btnColor = "bg-[#ff0000]"; bColor = "#ff0000"; } 
             else if (t.includes("RETUR")) { btnColor = "bg-[#facc15]"; bColor = "#facc15"; textColor = "text-black"; }
             else if (t.includes("SUPPLIER")) { btnColor = "bg-[#ffd700]"; bColor = "#ffd700"; textColor = "text-black"; }
-            else if (t.includes("EDIT BARCODE") || t.includes("EDIT HARGA") || t.includes("EDIT STOK")) { btnColor = "bg-[#3b82f6]"; bColor = "#3b82f6"; }
-            else if (t.includes("UPLOADING") || t.includes("DOWNLOADING")) { btnOk.style.display = "none"; bColor = "#3b82f6"; }
+            else if (t.includes("EDIT BARCODE")) { btnColor = "bg-[#ffffff]"; bColor = "#ffffff"; textColor = "text-black"; }
+            else if (t.includes("SUKSES") || t.includes("UPLOADING") || t.includes("DOWNLOADING")) { btnColor = "bg-[#38bdf8]"; bColor = "#38bdf8"; textColor = "text-black"; }
+            else if (t.includes("EDIT HARGA") || t.includes("EDIT STOK")) { btnColor = "bg-[#3b82f6]"; bColor = "#3b82f6"; }
             else { btnColor = "bg-[#3b82f6]"; bColor = "#3b82f6"; }
             
-            if(!t.includes("UPLOADING") && !t.includes("DOWNLOADING")) btnOk.style.display = "block";
+            if(!t.includes("UPLOADING") && !t.includes("DOWNLOADING")) btnOk.style.display = "block"; else btnOk.style.display = "none";
             btnOk.className = `flex-1 py-3 ${btnColor} ${textColor} rounded-xl text-xs font-black shadow-sm uppercase active:scale-95 transition`;
             mBrd.style.borderTopColor = bColor;
             inpBox.style.borderColor = bColor;
@@ -485,13 +551,40 @@
             m.style.display = 'flex'; if(mode==='prompt') setTimeout(()=>inp.focus(),300);
         }
         function closeModal() { document.getElementById('b-modal').style.display = 'none'; }
+        
         function exportData() { let d = []; db.supplier.forEach(s=>s.barang.forEach(b=>d.push({"Supplier":s.nama,"Barang":b.nama,"Barcode":b.bc||"","Harga":b.harga,"Stok":b.stok}))); const ws = XLSX.utils.json_to_sheet(d); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Stok"); XLSX.writeFile(wb, "STOK_BARLA.xlsx"); }
-        function importData(input) { if(!input.files[0]) return; const reader = new FileReader(); reader.readAsArrayBuffer(input.files[0]); reader.onload = (e) => { try { const workbook = XLSX.read(new Uint8Array(e.target.result), {type:'array'}); const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); json.forEach(row => { const sN = (row["Supplier"]||"").toString().trim(), bN = (row["Barang"]||"").toString().trim(), bc = (row["Barcode"]||"").toString().trim(), pr = clean(row["Harga"]||"0"), st = Math.abs(parseInt(row["Stok"]||"0"))||0; if(sN && bN) { let sup = db.supplier.find(x=>x.nama.toLowerCase()===sN.toLowerCase()); if(!sup){ sup={nama:sN, barang:[]}; db.supplier.unshift(sup); } let brg = sup.barang.find(x=>x.nama.toLowerCase()===bN.toLowerCase()); if(brg){ brg.bc=bc; brg.harga=pr; brg.stok=st; } else sup.barang.unshift({nama:bN, bc, harga:pr, stok:st}); } }); saveData(); openModal("SUKSES","","Data disinkronkan!",()=>location.reload(),"alert"); } catch(err) { openModal("ERROR","","Format salah!",null,"alert"); } input.value = ""; }; }
-        function printReturSemua() { let h = `<div class="text-center bold" style="font-size:11pt">RETUR SEMUA</div><div class="text-center">(${getTglStr()})</div><br>`; const g = db.retur.reduce((a,r)=>{(a[r.sup]=a[r.sup]||[]);a[r.sup].push(r);return a;},{}); for(let s in g){ h += `<div class="bold uppercase mt-2">${escapeHTML(s)}</div><table>`; g[s].forEach(r=>h+=`<tr><td>• ${escapeHTML(r.nama)}</td><td class="text-right">${r.qty} pcs</td></tr>`); h+=`</table><br>`; } document.getElementById('p-konten').innerHTML = h; window.print(); }
-        function printReturSup(sn) { let h = `<div class="text-center bold" style="font-size:11pt">RETUR: ${escapeHTML(sn)}</div><div class="text-center">(${getTglStr()})</div><br><table>`; db.retur.filter(x=>x.sup===sn).forEach(r=>h+=`<tr><td>• ${escapeHTML(r.nama)}</td><td class="text-right">${r.qty} pcs</td></tr>`); h+=`</table>`; document.getElementById('p-konten').innerHTML = h; window.print(); }
-        function printLapSemua() { let h = `<div class="text-center bold" style="font-size:12pt">LAPORAN STOK TIPIS</div><div class="line"></div>`; let has = false; db.supplier.forEach(s=>{ const k=s.barang.filter(b=>b.stok<30); if(k.length>0){ has=true; h+=`<div class="bold uppercase mt-2">[ ${escapeHTML(s.nama)} ]</div><table>`; k.forEach(b=>h+=`<tr><td>• ${escapeHTML(b.nama)}</td><td class="text-right">Sisa: ${b.stok}</td></tr>`); h+=`</table><div class="line"></div>`; } }); if(!has) return openModal("AMAN","","Semua stok cukup.",null,"alert"); document.getElementById('p-konten').innerHTML=h; window.print(); }
-        function waR(sn) { let m = `*RETUR BARANG*\n(${getTglStr()})\n\n*${sn.toUpperCase()}*\n`; db.retur.filter(x=>x.sup===sn).forEach(r=>m+=`• ${r.nama} : ${r.qty} pcs\n`); window.open(`https://wa.me/?text=${encodeURIComponent(m)}`); }
-        function waO(i) { let s=db.supplier[i], m=`*ORDER*\n(${getTglStr()})\n\n*${s.nama.toUpperCase()}*\n`; s.barang.filter(b=>b.stok<30).forEach(b=>m+=`• ${b.nama} : \n`); window.open(`https://wa.me/?text=${encodeURIComponent(m)}`); }
+        function importData(input) { if(!input.files[0]) return; const reader = new FileReader(); reader.readAsArrayBuffer(input.files[0]); reader.onload = (e) => { try { const workbook = XLSX.read(new Uint8Array(e.target.result), {type:'array'}); const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); json.forEach(row => { const sN = (row["Supplier"]||"").toString().trim(), bN = (row["Barang"]||"").toString().trim(), bc = (row["Barcode"]||"").toString().trim(), pr = clean(row["Harga"]||"0"), st = Math.abs(parseInt(row["Stok"]||"0"))||0; if(sN && bN) { let sup = db.supplier.find(x=>x.nama.toLowerCase()===sN.toLowerCase()); if(!sup){ sup={nama:sN, barang:[]}; db.supplier.unshift(sup); } let brg = sup.barang.find(x=>x.nama.toLowerCase()===bN.toLowerCase()); if(brg){ brg.bc=bc; brg.harga=pr; brg.stok=st; } else sup.barang.unshift({nama:bN, bc, harga:pr, stok:st}); } }); saveData(); openModal("SUKSES","","LOAD EXCEL",()=>{ renderStok(curTab); refreshDL(); },"alert"); } catch(err) { openModal("ERROR","","Format salah!",null,"alert"); } input.value = ""; }; }
+        
+        function printReturSemua() { 
+            let h = `          RETUR SEMUA           \n          (${getTglStr().replace(/\./g,'/')})           \n\n`; 
+            const g = db.retur.reduce((a,r)=>{(a[r.sup]=a[r.sup]||[]);a[r.sup].push(r);return a;},{}); 
+            for(let s in g){ 
+                h += `${escapeHTML(s).substring(0,32)}\n`; 
+                g[s].forEach(r=> { let nm = escapeHTML(r.nama).substring(0, 22).padEnd(22, ' '); let q = r.qty.toString().padStart(4, ' ') + " pcs"; h += `• ${nm}${q}\n`; }); 
+                h += `\n`; 
+            } 
+            document.getElementById('p-konten').innerHTML = `<pre>${h}</pre>`; window.print(); 
+        }
+        function printReturSup(sn) { 
+            let h = `RETUR: ${escapeHTML(sn).substring(0,25)}\n          (${getTglStr().replace(/\./g,'/')})           \n\n`; 
+            db.retur.filter(x=>x.sup===sn).forEach(r=> { let nm = escapeHTML(r.nama).substring(0, 22).padEnd(22, ' '); let q = r.qty.toString().padStart(4, ' ') + " pcs"; h += `• ${nm}${q}\n`; }); 
+            document.getElementById('p-konten').innerHTML = `<pre>${h}</pre>`; window.print(); 
+        }
+        function printLapSemua() { 
+            let h = `       LAPORAN STOK TIPIS       \n--------------------------------\n`; let has = false; 
+            db.supplier.forEach(s=>{ const k=s.barang.filter(b=>b.stok<30); if(k.length>0){ has=true; h += `[ ${escapeHTML(s.nama).substring(0,28)} ]\n`; k.forEach(b=>{ let nm = escapeHTML(b.nama).substring(0, 18).padEnd(18, ' '); let sisa = `Sisa: ${b.stok}`.padStart(11, ' '); h += `• ${nm} ${sisa}\n`; }); h += `--------------------------------\n`; } }); 
+            if(!has) return openModal("AMAN","","Semua stok cukup.",null,"alert"); document.getElementById('p-konten').innerHTML=`<pre>${h}</pre>`; window.print(); 
+        }
+        function waR(sn) { 
+            let h = `          RETUR BARANG          \n          (${getTglStr().replace(/\./g,'/')})           \n\n${sn.substring(0,32)}\n`; 
+            db.retur.filter(x=>x.sup===sn).forEach(r=> { let nm = r.nama.substring(0, 22).padEnd(22, ' '); let q = r.qty.toString().padStart(4, ' ') + " pcs"; h += `• ${nm}${q}\n`; }); 
+            window.open(`https://wa.me/?text=${encodeURIComponent("```text\n" + h + "\n```")}`); 
+        }
+        function waO(i) { 
+            let s=db.supplier[i]; let h = `             ORDER              \n          (${getTglStr().replace(/\./g,'/')})           \n\n${s.nama.substring(0,32)}\n`; 
+            s.barang.filter(b=>b.stok<30).forEach(b=> { let nm = b.nama.substring(0, 26).padEnd(26, ' '); h += `• ${nm}: \n`; }); 
+            window.open(`https://wa.me/?text=${encodeURIComponent("```text\n" + h + "\n```")}`); 
+        }
         function trHR(sn) { openModal("HAPUS?", "", `Data retur ${sn} dihapus?`, () => { db.retur=db.retur.filter(x=>x.sup!==sn); saveData(); renderStok('retur'); }, "confirm"); }
     </script>
 </body>
