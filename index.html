@@ -100,8 +100,7 @@
             <div class="bg-[#1e1f22] p-3 rounded-xl shadow-sm border border-[#2b2d31] mb-2">
                 <div class="flex gap-2 mb-2">
                     <div class="relative flex-1">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white text-xs z-10"></i>
-                        <input type="text" id="k-nama" list="db-list" oninput="handleInputNama(this)" placeholder="Nama Barang / Scan..." class="w-full pl-8 pr-9 py-2 rounded-lg font-bold text-xs outline-none transition-all">
+                        <input type="text" id="k-nama" list="db-list" oninput="handleInputNama(this)" placeholder="Nama Barang" class="w-full pl-3 pr-9 py-2 rounded-lg font-bold text-xs outline-none transition-all">
                         <button onclick="clearKasir()" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex justify-center items-center text-[#ff0000] rounded-full transition z-10"><i class="fas fa-times text-sm"></i></button>
                         <datalist id="db-list"></datalist>
                     </div>
@@ -131,10 +130,17 @@
         </div>
 
         <div id="section-stok" class="hidden space-y-4">
-            <div class="flex bg-[#1e1f22] rounded-xl shadow-sm p-1 border border-[#2b2d31] mb-4 mt-1">
-                <button onclick="tab('sup')" id="b-sup" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg tab-active transition text-white">Supplier</button>
-                <button onclick="tab('retur')" id="b-retur" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition text-white">Retur</button>
-                <button onclick="tab('lap')" id="b-lap" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition text-white">Laporan</button>
+            <div id="stok-tabs-container" class="flex bg-[#1e1f22] rounded-xl shadow-sm p-1 border border-[#2b2d31] mb-4 mt-1 items-center">
+                <button onclick="toggleStokSearch(true)" id="btn-stok-search" class="px-3 text-[#6b7280] active:scale-90 transition"><i class="fas fa-search text-sm"></i></button>
+                <div id="stok-tabs" class="flex flex-1 gap-1">
+                    <button onclick="tab('sup')" id="b-sup" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg tab-active transition text-white">Supplier</button>
+                    <button onclick="tab('retur')" id="b-retur" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition text-white">Retur</button>
+                    <button onclick="tab('lap')" id="b-lap" class="flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition text-white">Laporan</button>
+                </div>
+                <div id="stok-search-box" class="hidden flex-1 relative items-center">
+                    <input type="text" id="i-stok-search" oninput="renderStok(curTab)" placeholder="Cari..." class="w-full py-2 pl-3 pr-8 rounded-lg font-bold text-xs outline-none bg-transparent text-white border-none focus:ring-0">
+                    <button onclick="toggleStokSearch(false)" class="absolute right-2 top-1/2 -translate-y-1/2 text-[#ff0000] font-black text-sm p-1"><i class="fas fa-times"></i></button>
+                </div>
             </div>
             <div id="stok-content" class="space-y-3 pb-20"></div>
             <button onclick="openModalSup()" id="fab" class="fixed right-5 bottom-16 w-12 h-12 bg-[#3b82f6] text-white rounded-xl shadow-lg flex items-center justify-center text-lg z-40 active:scale-90 transition border border-[#3b82f6]"><i class="fas fa-plus"></i></button>
@@ -217,7 +223,7 @@
             try {
                 const res = await fetch(CLOUD_URL, { method: 'POST', body: JSON.stringify(db), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
                 const result = await res.json();
-                if(result.status === 'success') openModal("SUKSES", "", "BACKUP DI GOOGLE SHEETS!", () => {}, "alert");
+                if(result.status === 'success') openModal("SUKSES", "", "BACKUP KE GOOGLE SHEETS!", () => {}, "alert");
                 else throw new Error();
             } catch(e) { openModal("GAGAL", "", "Koneksi ke Google Sheets gagal.", null, "alert"); }
         }
@@ -451,6 +457,28 @@
             window.open(`https://wa.me/?text=${encodeURIComponent(finalStr)}`);
         }
 
+        function toggleStokSearch(show) {
+            const tabs = document.getElementById('stok-tabs');
+            const sIcon = document.getElementById('btn-stok-search');
+            const sBox = document.getElementById('stok-search-box');
+            const sInput = document.getElementById('i-stok-search');
+            
+            if(show) {
+                tabs.classList.add('hidden');
+                sIcon.classList.add('hidden');
+                sBox.classList.remove('hidden');
+                sBox.classList.add('flex');
+                sInput.focus();
+            } else {
+                tabs.classList.remove('hidden');
+                sIcon.classList.remove('hidden');
+                sBox.classList.add('hidden');
+                sBox.classList.remove('flex');
+                sInput.value = '';
+                renderStok(curTab);
+            }
+        }
+
         function navMode(m) {
             if (m === 'stok') curTab = 'sup';
             mode(m);
@@ -476,20 +504,58 @@
 
         function renderStok(t) {
             const c = document.getElementById('stok-content'); c.innerHTML = "";
+            const term = (document.getElementById('i-stok-search')?.value || "").toLowerCase();
+            
             if (t === 'sup') {
-                if (db.supplier.length === 0) c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>";
-                else db.supplier.forEach((s, i) => {
-                    let bl = ""; s.barang.forEach((b, bi) => bl += `<div class="flex justify-between items-center py-2.5 border-b border-[#2b2d31] border-dashed"><div><b class="text-xs text-white">${escapeHTML(b.nama)}</b><br><span class="text-[#3b82f6] text-[10px]">Rp ${b.harga.toLocaleString('id-ID')} | <span class="text-[#94a3b8]">${escapeHTML(b.bc) || '-'}</span></span></div><div class="flex items-center gap-3"><b class="text-sm text-white">${b.stok}</b><button onclick="openSheet('sup', ${i}, ${bi})" class="text-white hover:text-white text-lg px-2">⋮</button></div></div>`);
+                let hasData = false;
+                if (db.supplier.length === 0) { c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>"; return; }
+                
+                db.supplier.forEach((s, i) => {
+                    let filteredBarang = s.barang.filter(b => b.nama.toLowerCase().includes(term) || (b.bc && b.bc.toLowerCase().includes(term)));
+                    if (term && filteredBarang.length === 0 && !s.nama.toLowerCase().includes(term)) return;
+                    
+                    let itemsToRender = (term && s.nama.toLowerCase().includes(term) && filteredBarang.length===0) ? s.barang : (term ? filteredBarang : s.barang);
+                    
+                    hasData = true;
+                    let bl = ""; itemsToRender.forEach((b) => {
+                        let origIndex = s.barang.indexOf(b);
+                        bl += `<div class="flex justify-between items-center py-2.5 border-b border-[#2b2d31] border-dashed"><div><b class="text-xs text-white">${escapeHTML(b.nama)}</b><br><span class="text-[#3b82f6] text-[10px]">Rp ${b.harga.toLocaleString('id-ID')} | <span class="text-[#94a3b8]">${escapeHTML(b.bc) || '-'}</span></span></div><div class="flex items-center gap-3"><b class="text-sm text-white">${b.stok}</b><button onclick="openSheet('sup', ${i}, ${origIndex})" class="text-white hover:text-white text-lg px-2">⋮</button></div></div>`;
+                    });
+                    
                     c.innerHTML += `<div class="bg-[#1e1f22] rounded-2xl border border-[#2b2d31] p-4 mb-3 shadow-sm"><div class="flex justify-between items-start" onclick="openIdx=(openIdx===${i}?null:${i});matikanKamera();renderStok('sup')"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="event.stopPropagation();openSheet('head', ${i})" class="text-white hover:text-white px-2 font-bold text-lg leading-none">⋮</button></div><div class="${openIdx===i?'':'hidden'} mt-3 space-y-2 relative"><div class="flex gap-2"><input id="ib-n-${i}" placeholder="NAMA BARANG" class="flex-1 p-3 rounded-xl text-xs outline-none"><button onclick="bukaKameraPopup('ib-bc-${i}')" class="active:scale-75 transition bg-transparent border-0 rounded-xl px-2"><div class="premium-scan w-7 h-7 border-2 border-white"></div></button></div><input id="ib-bc-${i}" inputmode="numeric" placeholder="BARCODE" class="w-full p-3 rounded-xl text-xs outline-none"><div class="flex gap-2"><input id="ib-h-${i}" inputmode="numeric" oninput="formatRupiah(this)" placeholder="HARGA" class="w-1/2 p-3 rounded-xl text-xs outline-none"><input id="ib-s-${i}" inputmode="numeric" type="number" placeholder="STOK" class="w-1/2 p-3 rounded-xl text-xs outline-none"></div><button onclick="addB(${i})" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs active:scale-95 transition mt-2">Simpan Barang</button><div class="mt-2 border-t border-[#2b2d31] pt-1">${bl}</div></div></div>`;
                 });
+                if(!hasData) c.innerHTML = "<div class='text-center py-20 font-black text-[#6b7280] uppercase'>Tidak Ditemukan</div>";
+                
             } else if (t === 'retur') {
                 const g = db.retur.reduce((a, r) => { (a[r.sup] = a[r.sup] || []); a[r.sup].push(r); return a; }, {});
-                if (Object.keys(g).length === 0) c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>";
-                else { c.innerHTML = `<button onclick="printReturSemua()" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs mb-4 active:scale-95 transition">Print Semua Retur</button>`; for (let s in g) { let its = ""; g[s].forEach(r => its += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(r.nama)}</span><b class="text-[#ff0000]">${r.qty} Pcs</b></div>`); c.innerHTML += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s)}</b><button onclick="openSheet('retur', '${escapeHTML(s)}')" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${its}</div>`; } }
+                if (Object.keys(g).length === 0) { c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>"; return; }
+                
+                let hasData = false;
+                let htmlBuilder = `<button onclick="printReturSemua()" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs mb-4 active:scale-95 transition">Print Semua Retur</button>`; 
+                for (let s in g) { 
+                    let filteredRetur = g[s].filter(r => r.nama.toLowerCase().includes(term) || s.toLowerCase().includes(term));
+                    if(term && filteredRetur.length === 0 && !s.toLowerCase().includes(term)) continue;
+                    
+                    let itemsToRender = (term && s.toLowerCase().includes(term) && filteredRetur.length===0) ? g[s] : (term ? filteredRetur : g[s]);
+                    if(itemsToRender.length === 0) continue;
+                    
+                    hasData = true;
+                    let its = ""; itemsToRender.forEach(r => its += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(r.nama)}</span><b class="text-[#ff0000]">${r.qty} Pcs</b></div>`); 
+                    htmlBuilder += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s)}</b><button onclick="openSheet('retur', '${escapeHTML(s)}')" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${its}</div>`; 
+                }
+                if(!hasData) c.innerHTML = "<div class='text-center py-20 font-black text-[#6b7280] uppercase'>Tidak Ditemukan</div>";
+                else c.innerHTML = htmlBuilder;
+                
             } else if (t === 'lap') {
                 let has = false; let lapH = `<button onclick="printLapSemua()" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs mb-4 active:scale-95 transition">Print Laporan Stok</button>`;
-                db.supplier.forEach((s, i) => { let k = s.barang.filter(x => x.stok < 30); if (k.length > 0) { has = true; let bl = ""; k.forEach(b => bl += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(b.nama)}</span><b class="text-[#ff0000]">${b.stok}</b></div>`); lapH += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="openSheet('lap', ${i})" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${bl}</div>`; } });
-                c.innerHTML = has ? lapH : "<div class='text-center py-20 font-black text-white uppercase'>Stok Aman</div>";
+                db.supplier.forEach((s, i) => { 
+                    let k = s.barang.filter(x => x.stok < 30 && (x.nama.toLowerCase().includes(term) || s.nama.toLowerCase().includes(term))); 
+                    if (k.length > 0) { 
+                        has = true; let bl = ""; k.forEach(b => bl += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(b.nama)}</span><b class="text-[#ff0000]">${b.stok}</b></div>`); 
+                        lapH += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="openSheet('lap', ${i})" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${bl}</div>`; 
+                    } 
+                });
+                c.innerHTML = has ? lapH : "<div class='text-center py-20 font-black text-[#6b7280] uppercase'>Stok Aman / Tidak Ditemukan</div>";
             }
         }
 
@@ -556,7 +622,43 @@
         }
         function closeModal() { document.getElementById('b-modal').style.display = 'none'; }
         
-        function exportData() { let d = []; db.supplier.forEach(s=>s.barang.forEach(b=>d.push({"Supplier":s.nama,"Barang":b.nama,"Barcode":b.bc||"","Harga":b.harga,"Stok":b.stok}))); const ws = XLSX.utils.json_to_sheet(d); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Stok"); XLSX.writeFile(wb, "STOK_BARLA.xlsx"); }
+        function exportData() { 
+            let dStok = []; 
+            db.supplier.forEach(s=>s.barang.forEach(b=>dStok.push({"Supplier":s.nama,"Barang":b.nama,"Barcode":b.bc||"","Harga":b.harga,"Stok":b.stok}))); 
+            const wsStok = XLSX.utils.json_to_sheet(dStok); 
+            
+            let dHist = [];
+            db.history.forEach(trx => {
+                trx.items.forEach(i => {
+                    dHist.push({
+                        "Waktu": trx.waktu,
+                        "ID Transaksi": trx.id,
+                        "Barang": i.nama,
+                        "Qty": i.qty,
+                        "Harga Satuan": i.harga,
+                        "Total Harga": i.harga * i.qty
+                    });
+                });
+            });
+            const wsHist = XLSX.utils.json_to_sheet(dHist);
+
+            let dRet = [];
+            db.retur.forEach(r => {
+                dRet.push({
+                    "Supplier": r.sup,
+                    "Barang": r.nama,
+                    "Qty Retur": r.qty
+                });
+            });
+            const wsRet = XLSX.utils.json_to_sheet(dRet);
+
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, wsStok, "Stok"); 
+            XLSX.utils.book_append_sheet(wb, wsHist, "History"); 
+            XLSX.utils.book_append_sheet(wb, wsRet, "Retur"); 
+            XLSX.writeFile(wb, "DATA_BARLA.xlsx"); 
+        }
+
         function importData(input) { if(!input.files[0]) return; const reader = new FileReader(); reader.readAsArrayBuffer(input.files[0]); reader.onload = (e) => { try { const workbook = XLSX.read(new Uint8Array(e.target.result), {type:'array'}); const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); json.forEach(row => { const sN = (row["Supplier"]||"").toString().trim(), bN = (row["Barang"]||"").toString().trim(), bc = (row["Barcode"]||"").toString().trim(), pr = clean(row["Harga"]||"0"), st = Math.abs(parseInt(row["Stok"]||"0"))||0; if(sN && bN) { let sup = db.supplier.find(x=>x.nama.toLowerCase()===sN.toLowerCase()); if(!sup){ sup={nama:sN, barang:[]}; db.supplier.unshift(sup); } let brg = sup.barang.find(x=>x.nama.toLowerCase()===bN.toLowerCase()); if(brg){ brg.bc=bc; brg.harga=pr; brg.stok=st; } else sup.barang.unshift({nama:bN, bc, harga:pr, stok:st}); } }); saveData(); openModal("SUKSES","","LOAD DARI EXCEL!",()=>{ renderStok(curTab); refreshDL(); },"alert"); } catch(err) { openModal("ERROR","","Format salah!",null,"alert"); } input.value = ""; }; }
         
         function printReturSemua() { 
