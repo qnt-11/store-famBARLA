@@ -63,32 +63,29 @@
             </div>
             
             <div id="h-stok" class="hidden flex items-center gap-3">
-                <button onclick="uploadCloud()" class="flex flex-col items-center text-sky-400 active:scale-75 transition">
+                <button onclick="uploadCloud()" class="flex flex-col items-center text-sky-400 active:scale-75 transition mt-0.5">
                     <i class="fas fa-cloud-upload-alt text-lg"></i>
                     <span class="text-[7px] font-bold mt-0.5 uppercase text-white">UPLOAD</span>
                 </button>
 
-                <div class="relative">
-                    <button onclick="toggleMenu('floatingStokMenu')" class="text-white active:scale-75 transition p-1">
-                        <i class="fas fa-ellipsis-v text-xl"></i>
+                <div class="relative flex items-center h-full">
+                    <button onclick="toggleMenu('floatingStokMenu')" class="text-white active:scale-75 transition px-2 py-1">
+                        <i class="fas fa-ellipsis-v text-base"></i>
                     </button>
 
-                    <div id="floatingStokMenu" class="hidden absolute right-0 top-full mt-3 w-40 p-1 bg-[#1e1f22] border border-[#2b2d31] rounded-xl shadow-2xl z-[60] space-y-1">
-                        <button onclick="toggleMenu('floatingStokMenu'); downloadCloud();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white hover:bg-[#2b2d31] transition">
+                    <div id="floatingStokMenu" class="hidden absolute right-0 top-full mt-3 w-40 p-2 bg-[#1e1f22] border border-[#2b2d31] rounded-xl shadow-2xl z-[60] space-y-1.5">
+                        <button onclick="toggleMenu('floatingStokMenu'); downloadCloud();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-sky-400 text-white hover:bg-[#2b2d31] transition">
                             <i class="fas fa-cloud-download-alt text-base text-sky-400 w-5 text-center"></i>
-                            <span class="text-xs font-bold uppercase tracking-wide">Load Cloud</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide">Load Cloud</span>
                         </button>
-
                         <div class="border-t border-[#2b2d31] my-1"></div>
-
                         <button onclick="toggleMenu('floatingStokMenu'); exportData();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-[#217346] text-[#217346] hover:bg-[#2b2d31] transition">
                             <i class="fas fa-file-export text-base w-5 text-center"></i>
-                            <span class="text-xs font-bold uppercase tracking-wide">Save Excel</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide">Save Excel</span>
                         </button>
-
                         <button onclick="toggleMenu('floatingStokMenu'); document.getElementById('fIn').click();" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-[#217346] text-[#217346] hover:bg-[#2b2d31] transition">
                             <i class="fas fa-file-import text-base w-5 text-center"></i>
-                            <span class="text-xs font-bold uppercase tracking-wide">Load Excel</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide">Load Excel</span>
                         </button>
                         <input type="file" id="fIn" class="hidden" accept=".csv, .xlsx, .xls" onchange="importData(this)">
                     </div>
@@ -164,9 +161,9 @@
         <div class="bg-[#1e1f22] w-full max-w-xs rounded-3xl p-6 shadow-2xl space-y-4 border-t-[8px]" id="m-border">
             <h3 id="m-title" class="font-black text-white text-center uppercase text-lg italic"></h3>
             <p id="m-desc" class="text-[11px] text-white font-bold text-center uppercase whitespace-pre-wrap"></p>
-            <div id="m-input-box" style="display:none;" class="flex gap-2 items-center bg-[#131314] p-1 rounded-xl border border-[#4b5563]">
-                <input type="text" id="m-input" oninput="handleModalInput(this)" class="flex-1 w-0 p-3 rounded-xl text-center text-xl font-black outline-none focus:border-[#3b82f6]">
-                <button id="m-scan-btn" style="display:none;" class="w-12 h-12 shrink-0 bg-transparent flex items-center justify-center active:scale-90 transition"><div class="premium-scan w-8 h-8 border-2 border-white rounded-md"></div></button>
+            <div id="m-input-box" style="display:none;" class="flex gap-2 items-center bg-[#131314] p-1 rounded-xl border-2">
+                <input type="text" id="m-input" oninput="handleModalInput(this)" class="flex-1 w-0 p-2 bg-transparent border-none text-center text-xl font-black outline-none text-white">
+                <button id="m-scan-btn" style="display:none;" class="w-10 h-10 shrink-0 bg-transparent flex items-center justify-center active:scale-90 transition pr-2"><div class="premium-scan w-7 h-7 border border-white rounded-md"></div></button>
             </div>
             <div class="flex gap-2 pt-1">
                 <button id="m-cancel" onclick="closeModal()" style="display:none;" class="flex-1 py-3 text-xs font-black text-white uppercase rounded-xl hover:bg-[#2b2d31] transition">Batal</button>
@@ -416,15 +413,15 @@
                 if (db.supplier.length === 0) c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>";
                 else db.supplier.forEach((s, i) => {
                     let bl = ""; s.barang.forEach((b, bi) => bl += `<div class="flex justify-between items-center py-2.5 border-b border-[#2b2d31] border-dashed"><div><b class="text-xs text-white">${escapeHTML(b.nama)}</b><br><span class="text-[#3b82f6] text-[10px]">Rp ${b.harga.toLocaleString('id-ID')} | <span class="text-[#94a3b8]">${escapeHTML(b.bc) || '-'}</span></span></div><div class="flex items-center gap-3"><b class="text-sm text-white">${b.stok}</b><button onclick="openSheet('sup', ${i}, ${bi})" class="text-white hover:text-white text-lg px-2">⋮</button></div></div>`);
-                    c.innerHTML += `<div class="bg-[#1e1f22] rounded-2xl border border-[#2b2d31] p-4 mb-3 shadow-sm"><div class="flex justify-between items-start" onclick="openIdx=(openIdx===${i}?null:${i});matikanKamera();renderStok('sup')"><b class="uppercase text-[#ffffff] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="event.stopPropagation();openSheet('head', ${i})" class="text-white hover:text-white px-2 font-bold text-lg leading-none">⋮</button></div><div class="${openIdx===i?'':'hidden'} mt-3 space-y-2 relative"><div class="flex gap-2"><input id="ib-n-${i}" placeholder="NAMA BARANG" class="flex-1 p-3 rounded-xl text-xs outline-none"><button onclick="bukaKameraPopup('ib-bc-${i}')" class="active:scale-75 transition bg-transparent border-0 rounded-xl px-2"><div class="premium-scan w-7 h-7 border-2 border-white"></div></button></div><input id="ib-bc-${i}" inputmode="numeric" placeholder="BARCODE" class="w-full p-3 rounded-xl text-xs outline-none"><div class="flex gap-2"><input id="ib-h-${i}" inputmode="numeric" oninput="formatRupiah(this)" placeholder="HARGA" class="w-1/2 p-3 rounded-xl text-xs outline-none"><input id="ib-s-${i}" inputmode="numeric" type="number" placeholder="STOK" class="w-1/2 p-3 rounded-xl text-xs outline-none"></div><button onclick="addB(${i})" class="w-full bg-[#3b82f6] hover:opacity-80 text-white py-3 rounded-xl font-bold uppercase text-xs shadow-md">Simpan Barang</button><div class="mt-2 border-t border-[#2b2d31] pt-1">${bl}</div></div></div>`;
+                    c.innerHTML += `<div class="bg-[#1e1f22] rounded-2xl border border-[#2b2d31] p-4 mb-3 shadow-sm"><div class="flex justify-between items-start" onclick="openIdx=(openIdx===${i}?null:${i});matikanKamera();renderStok('sup')"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="event.stopPropagation();openSheet('head', ${i})" class="text-white hover:text-white px-2 font-bold text-lg leading-none">⋮</button></div><div class="${openIdx===i?'':'hidden'} mt-3 space-y-2 relative"><div class="flex gap-2"><input id="ib-n-${i}" placeholder="NAMA BARANG" class="flex-1 p-3 rounded-xl text-xs outline-none"><button onclick="bukaKameraPopup('ib-bc-${i}')" class="active:scale-75 transition bg-transparent border-0 rounded-xl px-2"><div class="premium-scan w-7 h-7 border-2 border-white"></div></button></div><input id="ib-bc-${i}" inputmode="numeric" placeholder="BARCODE" class="w-full p-3 rounded-xl text-xs outline-none"><div class="flex gap-2"><input id="ib-h-${i}" inputmode="numeric" oninput="formatRupiah(this)" placeholder="HARGA" class="w-1/2 p-3 rounded-xl text-xs outline-none"><input id="ib-s-${i}" inputmode="numeric" type="number" placeholder="STOK" class="w-1/2 p-3 rounded-xl text-xs outline-none"></div><button onclick="addB(${i})" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs active:scale-95 transition mt-2">Simpan Barang</button><div class="mt-2 border-t border-[#2b2d31] pt-1">${bl}</div></div></div>`;
                 });
             } else if (t === 'retur') {
                 const g = db.retur.reduce((a, r) => { (a[r.sup] = a[r.sup] || []); a[r.sup].push(r); return a; }, {});
                 if (Object.keys(g).length === 0) c.innerHTML = "<div class='text-center py-20 font-black text-white'>KOSONG</div>";
-                else { c.innerHTML = `<button onclick="printReturSemua()" class="w-full bg-[#3b82f6] hover:opacity-80 text-white py-3 rounded-xl font-black text-xs uppercase mb-4 shadow-md">Print Semua Retur</button>`; for (let s in g) { let its = ""; g[s].forEach(r => its += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(r.nama)}</span><b class="text-[#ff0000]">${r.qty} Pcs</b></div>`); c.innerHTML += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s)}</b><button onclick="openSheet('retur', '${escapeHTML(s)}')" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${its}</div>`; } }
+                else { c.innerHTML = `<button onclick="printReturSemua()" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs mb-4 active:scale-95 transition">Print Semua Retur</button>`; for (let s in g) { let its = ""; g[s].forEach(r => its += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(r.nama)}</span><b class="text-[#ff0000]">${r.qty} Pcs</b></div>`); c.innerHTML += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s)}</b><button onclick="openSheet('retur', '${escapeHTML(s)}')" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${its}</div>`; } }
             } else if (t === 'lap') {
-                let has = false; let lapH = `<button onclick="printLapSemua()" class="w-full bg-[#3b82f6] hover:opacity-80 text-white py-3 rounded-xl font-black text-xs uppercase mb-4 shadow-md">Print Laporan Stok</button>`;
-                db.supplier.forEach((s, i) => { let k = s.barang.filter(x => x.stok < 30); if (k.length > 0) { has = true; let bl = ""; k.forEach(b => bl += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(b.nama)}</span><b class="text-[#ff0000]">${b.stok}</b></div>`); lapH += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffffff] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="openSheet('lap', ${i})" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${bl}</div>`; } });
+                let has = false; let lapH = `<button onclick="printLapSemua()" class="w-full bg-transparent border border-[#3b82f6] text-[#3b82f6] py-3 rounded-xl font-bold uppercase text-xs mb-4 active:scale-95 transition">Print Laporan Stok</button>`;
+                db.supplier.forEach((s, i) => { let k = s.barang.filter(x => x.stok < 30); if (k.length > 0) { has = true; let bl = ""; k.forEach(b => bl += `<div class="text-[11px] py-2 border-b border-[#2b2d31] border-dashed flex justify-between items-start text-white"><span>• ${escapeHTML(b.nama)}</span><b class="text-[#ff0000]">${b.stok}</b></div>`); lapH += `<div class="bg-[#1e1f22] p-4 rounded-2xl border border-[#2b2d31] mb-3 shadow-sm"><div class="flex justify-between items-start mb-2"><b class="uppercase text-[#ffd700] text-sm leading-tight">${escapeHTML(s.nama)}</b><button onclick="openSheet('lap', ${i})" class="text-white hover:text-white text-lg px-2 leading-none">⋮</button></div>${bl}</div>`; } });
                 c.innerHTML = has ? lapH : "<div class='text-center py-20 font-black text-white uppercase'>Stok Aman</div>";
             }
         }
@@ -441,7 +438,13 @@
         function action(type) {
             closeSheet(); const brg = db.supplier[selS].barang[selB];
             if (type === 'stok') openModal("EDIT STOK", brg.stok.toString(), brg.nama, (v) => { db.supplier[selS].barang[selB].stok = Math.abs(parseInt(v))||0; cart=[]; saveData(); }, "prompt", "numeric");
-            if (type === 'harga') openModal("EDIT HARGA", brg.harga.toLocaleString('id-ID'), brg.nama, (v) => { db.supplier[selS].barang[selB].harga = clean(v); cart=[]; saveData(); }, "prompt", "numeric");
+            if (type === 'harga') openModal("EDIT HARGA", brg.harga.toLocaleString('id-ID'), brg.nama, (v) => { 
+                let nH = clean(v); let oH = db.supplier[selS].barang[selB].harga;
+                db.supplier[selS].barang[selB].harga = nH; 
+                let cItem = cart.find(x => x.nama.toUpperCase() === brg.nama.toUpperCase() && x.harga === oH);
+                if (cItem) cItem.harga = nH;
+                saveData(); renderCart(); refreshDL();
+            }, "prompt", "numeric");
             if (type === 'barcode') openModal("EDIT BARCODE", brg.bc||"", brg.nama, (v) => { if(v && db.supplier.some(s=>s.barang.some(b=>b.bc===v.trim() && b.nama!==brg.nama))) return openModal("DUPLIKAT","","Barcode sudah dipakai!",null,"alert"); db.supplier[selS].barang[selB].bc = v.trim(); saveData(); }, "prompt", "text", true);
             if (type === 'retur') openModal("RETUR", "", brg.nama, (v) => { let q = Math.abs(parseInt(v))||0; if(q<=0||q>brg.stok) return openModal("GAGAL","","Jumlah tidak valid!",null,"alert"); db.supplier[selS].barang[selB].stok -= q; let ada = db.retur.find(r=>r.sup===db.supplier[selS].nama && r.nama===brg.nama); if(ada) ada.qty+=q; else db.retur.push({sup:db.supplier[selS].nama, nama:brg.nama, qty:q}); cart=[]; saveData(); }, "prompt", "numeric");
             if (type === 'hapus') openModal("HAPUS?", "", `Hapus ${brg.nama}?`, () => { db.retur=db.retur.filter(r=>!(r.sup===db.supplier[selS].nama && r.nama===brg.nama)); cart=[]; db.supplier[selS].barang.splice(selB,1); saveData(); }, "confirm");
@@ -464,11 +467,17 @@
             document.getElementById('m-title').innerText = t; document.getElementById('m-desc').innerText = d; inp.value = v; inp.inputMode = type==="numeric"?"numeric":"text";
             inpBox.style.display = (mode==='prompt')?'flex':'none'; btnC.style.display = (mode!=='alert')?'block':'none'; btnS.style.display = withScan?'flex':'none';
             
-            if (t.includes("HAPUS?")) { btnOk.className = "flex-1 py-3 bg-[#ff0000] text-white rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition"; mBrd.style.borderTopColor = "#ff0000"; } 
-            else if (t.includes("RETUR")) { btnOk.className = "flex-1 py-3 bg-[#facc15] text-black rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition"; mBrd.style.borderTopColor = "#facc15"; }
-            else if (t.includes("EDIT BARCODE") || t.includes("EDIT HARGA") || t.includes("EDIT STOK") || t.includes("SUPPLIER")) { btnOk.className = "flex-1 py-3 bg-[#3b82f6] text-white rounded-xl text-xs font-black shadow-md uppercase active:scale-95 transition"; mBrd.style.borderTopColor = "#3b82f6"; }
-            else if (t.includes("UPLOADING") || t.includes("DOWNLOADING")) { btnOk.className = "hidden"; mBrd.style.borderTopColor = "#3b82f6"; }
-            else { btnOk.className = "flex-1 py-3 bg-[#3b82f6] text-white rounded-xl text-xs font-black shadow-sm uppercase active:scale-95 transition"; mBrd.style.borderTopColor = "#3b82f6"; }
+            let btnColor = "bg-[#3b82f6]"; let textColor = "text-white"; let bColor = "#3b82f6";
+            if (t.includes("HAPUS?")) { btnColor = "bg-[#ff0000]"; bColor = "#ff0000"; } 
+            else if (t.includes("RETUR")) { btnColor = "bg-[#facc15]"; bColor = "#facc15"; textColor = "text-black"; }
+            else if (t.includes("EDIT BARCODE") || t.includes("EDIT HARGA") || t.includes("EDIT STOK") || t.includes("SUPPLIER")) { btnColor = "bg-[#3b82f6]"; bColor = "#3b82f6"; }
+            else if (t.includes("UPLOADING") || t.includes("DOWNLOADING")) { btnOk.style.display = "none"; bColor = "#3b82f6"; }
+            else { btnColor = "bg-[#3b82f6]"; bColor = "#3b82f6"; }
+            
+            if(!t.includes("UPLOADING") && !t.includes("DOWNLOADING")) btnOk.style.display = "block";
+            btnOk.className = `flex-1 py-3 ${btnColor} ${textColor} rounded-xl text-xs font-black shadow-sm uppercase active:scale-95 transition`;
+            mBrd.style.borderTopColor = bColor;
+            inpBox.style.borderColor = bColor;
             
             btnS.onclick = () => bukaKameraPopup('modal');
             btnOk.onclick = () => { if(cb) mode==='prompt'?cb(inp.value):cb(); closeModal(); };
