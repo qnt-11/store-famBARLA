@@ -1,6 +1,7 @@
 {
-  "name": "BARLA STORE v18.1",
-  "short_name": "BARLA KASIR",
+  "name": "STORE famBARLA",
+  "short_name": "famBARLA",
+  "description": "Aplikasi Kasir Toko Kelontong famBARLA",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#131314",
