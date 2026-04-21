@@ -4,7 +4,7 @@
  * Network-First (Anti-Captive Portal), & Aggressive Memory Trimmer.
  */
 
-const APP_VERSION = '30.9-OMEGA'; 
+const APP_VERSION = '40.0-OMEGA'; 
 
 const CACHE_CORE = 'fambarla-core-v' + APP_VERSION; 
 const CACHE_DYNAMIC = 'fambarla-dynamic-v' + APP_VERSION;
