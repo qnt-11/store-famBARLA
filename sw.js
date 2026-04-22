@@ -3,7 +3,7 @@
  * Architecture: Clean Cache-Key, Strict Install, Network-First, & Aggressive Memory Trimmer.
  */
 
-const APP_VERSION = '1.4'; 
+const APP_VERSION = '1.0'; 
 
 const CACHE_CORE = 'fambarla-core-v' + APP_VERSION; 
 const CACHE_DYNAMIC = 'fambarla-dynamic-v' + APP_VERSION;
