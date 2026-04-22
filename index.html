@@ -19,10 +19,10 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --gemini-bg: #000000; }
-        body { font-family: "Segoe UI", sans-serif; background: var(--gemini-bg); color: #ffffff; -webkit-tap-highlight-color: transparent; }
+        body { font-family: "Segoe UI", sans-serif; background: var(--gemini-bg); color: #ffffff; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
-        /* FONT & ANIMASI LED HEADER DIKEMBALIKAN KE 4.5s */
+        /* FONT & ANIMASI LED HEADER */
         .audiowide-regular { font-family: "Audiowide", sans-serif; font-weight: 400; font-style: normal; }
         .led-matrix-text { color: #333333; }
         .led-char { animation: led-sweep 4.5s infinite; }
@@ -46,7 +46,7 @@
 
         @media print {
             @page { margin: 0; size: auto; }
-            body { background: white; margin: 0; padding: 0; height: auto !important; overflow: auto !important; position: static !important; }
+            body { background: white; margin: 0; padding: 0; }
             body * { display: none !important; }
             #areaStruk, #areaStruk * { display: block !important; visibility: visible !important; }
             #areaStruk { position: absolute; left: 0; top: 0; color: #000; background: white; width: 100%; margin: 0; padding: 0; }
@@ -76,9 +76,9 @@
         .sync-dot { display: none; width: 6px; height: 6px; background-color: #ff0000; border-radius: 50%; position: absolute; top: -2px; right: -2px; }
     </style>
 </head>
-<body class="relative flex flex-col h-[100dvh] overflow-hidden bg-[#000000]">
+<body class="pb-6">
 
-    <header class="bg-[#000000] p-3 text-white sticky top-0 z-50 flex justify-between items-center no-print border-b border-[#666666] flex-shrink-0">
+    <header class="bg-[#000000] p-3 text-white sticky top-0 z-50 flex justify-between items-center no-print border-b border-[#666666]">
         <div>
             <h1 class="text-[17px] leading-none tracking-wide flex items-baseline gap-1.5 audiowide-regular led-matrix-text">
                 <span class="flex">
@@ -108,7 +108,7 @@
         
         <button onclick="toggleMainMode()" class="text-[#3b82f6] px-2 py-1.5 uppercase transition-colors active:text-white bg-transparent mx-2 flex-shrink-0 flex flex-col items-center justify-center min-w-[60px]">
             <span id="menu-active-text" class="text-[10px] font-black audiowide-regular leading-none mb-1 mt-0.5">STOK</span>
-            <i id="menu-active-icon" class="fas fa-arrow-right text-[12px] text-[#808080] leading-none mb-0.5 sweep-right-anim"></i>
+            <i id="menu-active-icon" class="fas fa-arrow-right text-[10px] text-[#808080] leading-none mb-0.5 sweep-right-anim"></i>
         </button>
 
         <div class="flex items-center gap-4">
@@ -143,63 +143,71 @@
         </div>
     </div>
 
-    <div id="modal-menu-nav" class="modal-bg z-[2000]" style="display: none;"></div>
-
-    <main class="flex-1 w-full max-w-md mx-auto no-print bg-[#000000] overflow-hidden relative" id="m-content">
-        <div id="swipe-track" class="flex w-[200%] h-full transition-transform duration-300 ease-out" style="transform: translateX(0%);">
-            
-            <div id="section-kasir" class="w-1/2 flex-shrink-0 px-2 pt-1 bg-[#000000] relative h-full flex flex-col"> 
-                <div class="bg-[#000000] p-3 rounded-xl border border-[#666666] mb-2 mt-2 flex-shrink-0">
-                    <div class="flex gap-2 mb-2">
-                        <div class="relative flex-1">
-                            <input type="text" id="k-nama" list="db-list" oninput="handleInputNama(this)" placeholder="Nama Barang / Barcode" class="w-full pl-3 pr-9 py-2 rounded-lg font-bold text-xs outline-none transition-colors placeholder-[#808080] text-[#ffffff] bg-[#000000]">
-                            <button onclick="clearKasir()" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex justify-center items-center text-[#ff0000] rounded-full transition-colors active:text-white z-10"><i class="fas fa-times text-sm"></i></button>
-                            <datalist id="db-list"></datalist>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="relative w-2/5"><span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#808080] z-10">Rp</span><input type="text" id="k-harga" inputmode="numeric" oninput="formatRupiah(this)" placeholder="Harga" class="w-full pl-7 pr-2 py-2 rounded-lg font-bold text-xs outline-none transition-colors placeholder-[#808080] text-[#ffffff] bg-[#000000]"></div>
-                        <input type="text" id="k-qty" inputmode="decimal" placeholder="Qty" class="w-1/5 px-1 py-2 rounded-lg font-bold text-xs text-center outline-none transition-colors placeholder-[#808080] text-[#ffffff] bg-[#000000]">
-                        <button onclick="tambahItem()" class="w-2/5 bg-transparent border border-[#3b82f6] text-[#3b82f6] font-bold text-xs rounded-lg transition-colors active:text-white active:border-white flex items-center justify-center gap-1 uppercase audiowide-regular"><i class="fas fa-plus"></i> ADD</button>
-                    </div>
-                </div>
-                <div id="list-cart" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 bg-[#000000] pb-[130px] pt-1"></div>
-                
-                <div id="p-bayar" class="absolute bottom-0 left-0 w-full bg-[#000000] px-4 py-3 border-t border-[#666666] z-30">
-                    <div class="flex justify-between items-center mb-2 gap-3 max-w-md mx-auto">
-                        <div class="flex flex-col"><span class="text-[9px] font-black text-[#808080] uppercase tracking-wide audiowide-regular">Total</span><span id="t-total" class="text-2xl font-black text-[#ff0000] leading-none tracking-tighter">Rp 0</span></div>
-                        <div class="w-1/2"><input type="text" id="i-bayar" inputmode="numeric" oninput="formatRupiah(this)" placeholder="Bayar" class="w-full text-right text-base font-black px-3 py-1.5 rounded-lg outline-none placeholder-[#808080] text-[#ffffff] bg-[#000000]"></div>
-                    </div>
-                    <div class="max-w-md mx-auto">
-                        <div id="b-kembali" class="hidden flex justify-between items-center bg-[#000000] border border-[#666666] rounded-lg p-1.5 px-3 mb-2 transition-colors"><span class="text-[10px] font-bold text-[#808080] uppercase audiowide-regular">Kembalian</span><span id="t-kembali" class="text-sm font-black">Rp 0</span></div>
-                        <div class="flex gap-2">
-                            <button onclick="checkout('wa')" class="flex-1 bg-transparent border border-[#25D366] text-[#25D366] font-bold py-2.5 rounded-lg uppercase text-[11px] transition-colors active:text-white active:border-white flex justify-center items-center gap-1.5 audiowide-regular"><i class="fab fa-whatsapp text-sm"></i> WhatsApp</button>
-                            <button onclick="checkout('print')" class="flex-1 bg-transparent border border-[#3b82f6] text-[#3b82f6] font-bold py-2.5 rounded-lg uppercase text-[11px] transition-colors active:text-white active:border-white flex justify-center items-center gap-1.5 audiowide-regular"><i class="fas fa-print text-sm"></i> Cetak</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="section-stok" class="w-1/2 flex-shrink-0 px-2 pt-1 bg-[#000000] relative h-full flex flex-col">
-                <div id="stok-tabs-container" class="flex bg-[#000000] rounded-xl p-1 border border-[#666666] mb-4 mt-2 items-center flex-shrink-0">
-                    <button onclick="toggleStokSearch(true)" id="btn-stok-search" class="px-3 text-[#808080] transition-colors active:text-white"><i class="fas fa-search text-sm"></i></button>
-                    <div id="stok-tabs" class="flex flex-1 gap-1">
-                        <button onclick="tab('sup')" id="b-sup" class="audiowide-regular flex-1 py-2 text-[10px] uppercase rounded-lg tab-active transition-colors text-[#808080] bg-transparent">Supplier</button>
-                        <button onclick="tab('retur')" id="b-retur" class="audiowide-regular flex-1 py-2 text-[10px] uppercase rounded-lg transition-colors text-[#808080] bg-transparent">Retur</button>
-                        <button onclick="tab('lap')" id="b-lap" class="audiowide-regular flex-1 py-2 text-[10px] uppercase rounded-lg transition-colors text-[#808080] bg-transparent">Laporan</button>
-                    </div>
-                    <div id="stok-search-box" class="hidden flex-1 relative items-center">
-                        <input type="text" id="i-stok-search" oninput="renderStok(curTab)" placeholder="Cari..." class="border-none w-full py-2 pl-3 pr-8 rounded-lg font-bold text-xs outline-none bg-transparent text-[#ffffff] focus:ring-0 placeholder-[#808080]">
-                        <button onclick="toggleStokSearch(false)" class="absolute right-2 top-1/2 -translate-y-1/2 text-[#ff0000] font-black text-sm p-1 transition-colors active:text-white"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>
-                <div id="stok-content" class="flex-1 min-h-0 overflow-y-auto space-y-3 pb-24 pt-1"></div>
-                
-                <button onclick="openModalSup()" id="fab" class="absolute right-5 bottom-5 w-[56px] h-[56px] bg-[#000000] text-[#ffffff] rounded-[16px] flex items-center justify-center text-2xl z-50 transition-colors active:text-[#666666] active:border-[#666666] border border-[#ffffff]">
-                    <i class="fas fa-plus"></i>
+    <div id="modal-menu-nav" class="modal-bg z-[2000]" style="display: none;">
+        <div class="bg-[#000000] w-full max-w-xs rounded-3xl p-6 space-y-4 border border-[#666666]">
+            <h3 class="font-black text-center uppercase text-lg italic text-[#666666] border-b border-[#666666] pb-3 audiowide-regular">PILIH MENU</h3>
+            <div class="space-y-3 pt-2">
+                <button id="btn-nav-kasir" onclick="pilihMenu('kasir')" class="w-full flex items-center justify-center gap-3 p-4 rounded-xl font-bold uppercase text-xs border bg-transparent transition-colors active:text-white active:border-white audiowide-regular">
+                    <i class="fas fa-store text-lg"></i> KASIR
+                </button>
+                <button id="btn-nav-stok" onclick="pilihMenu('stok')" class="w-full flex items-center justify-center gap-3 p-4 rounded-xl font-bold uppercase text-xs border bg-transparent transition-colors active:text-white active:border-white audiowide-regular">
+                    <i class="fas fa-box-open text-lg"></i> STOK
                 </button>
             </div>
+            <button onclick="document.getElementById('modal-menu-nav').style.display='none'; activeModalId = null;" class="w-full mt-3 py-3 text-xs font-black text-[#ff0000] uppercase rounded-xl border border-[#ff0000] transition-colors active:text-white active:border-white bg-transparent audiowide-regular">Batal</button>
+        </div>
+    </div>
 
+    <main class="max-w-md mx-auto p-2 no-print bg-[#000000]" id="m-content">
+        <div id="section-kasir" class="pb-32 pt-1 bg-[#000000]"> 
+            <div class="bg-[#000000] p-3 rounded-xl border border-[#666666] mb-2">
+                <div class="flex gap-2 mb-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="k-nama" list="db-list" oninput="handleInputNama(this)" placeholder="Nama Barang / Barcode" class="w-full pl-3 pr-9 py-2 rounded-lg font-bold text-xs outline-none transition-colors placeholder-[#808080] text-[#ffffff] bg-[#000000]">
+                        <button onclick="clearKasir()" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex justify-center items-center text-[#ff0000] rounded-full transition-colors active:text-white z-10"><i class="fas fa-times text-sm"></i></button>
+                        <datalist id="db-list"></datalist>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="relative w-2/5"><span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#808080] z-10">Rp</span><input type="text" id="k-harga" inputmode="numeric" oninput="formatRupiah(this)" placeholder="Harga" class="w-full pl-7 pr-2 py-2 rounded-lg font-bold text-xs outline-none transition-colors placeholder-[#808080] text-[#ffffff] bg-[#000000]"></div>
+                    <input type="text" id="k-qty" inputmode="decimal" placeholder="Qty" class="w-1/5 px-1 py-2 rounded-lg font-bold text-xs text-center outline-none transition-colors placeholder-[#808080] text-[#ffffff] bg-[#000000]">
+                    <button onclick="tambahItem()" class="w-2/5 bg-transparent border border-[#3b82f6] text-[#3b82f6] font-bold text-xs rounded-lg transition-colors active:text-white active:border-white flex items-center justify-center gap-1 uppercase audiowide-regular"><i class="fas fa-plus"></i> ADD</button>
+                </div>
+            </div>
+            <div id="list-cart" class="space-y-1.5 bg-[#000000]"></div>
+            <div id="p-bayar" class="fixed bottom-0 left-0 w-full bg-[#000000] px-4 py-3 border-t border-[#666666] z-30">
+                <div class="flex justify-between items-center mb-2 gap-3 max-w-md mx-auto">
+                    <div class="flex flex-col"><span class="text-[9px] font-black text-[#808080] uppercase tracking-wide audiowide-regular">Total</span><span id="t-total" class="text-2xl font-black text-[#ff0000] leading-none tracking-tighter">Rp 0</span></div>
+                    <div class="w-1/2"><input type="text" id="i-bayar" inputmode="numeric" oninput="formatRupiah(this)" placeholder="Bayar" class="w-full text-right text-base font-black px-3 py-1.5 rounded-lg outline-none placeholder-[#808080] text-[#ffffff] bg-[#000000]"></div>
+                </div>
+                <div class="max-w-md mx-auto">
+                    <div id="b-kembali" class="hidden flex justify-between items-center bg-[#000000] border border-[#666666] rounded-lg p-1.5 px-3 mb-2 transition-colors"><span class="text-[10px] font-bold text-[#808080] uppercase audiowide-regular">Kembalian</span><span id="t-kembali" class="text-sm font-black">Rp 0</span></div>
+                    <div class="flex gap-2">
+                        <button onclick="checkout('wa')" class="flex-1 bg-transparent border border-[#25D366] text-[#25D366] font-bold py-2.5 rounded-lg uppercase text-[11px] transition-colors active:text-white active:border-white flex justify-center items-center gap-1.5 audiowide-regular"><i class="fab fa-whatsapp text-sm"></i> WhatsApp</button>
+                        <button onclick="checkout('print')" class="flex-1 bg-transparent border border-[#3b82f6] text-[#3b82f6] font-bold py-2.5 rounded-lg uppercase text-[11px] transition-colors active:text-white active:border-white flex justify-center items-center gap-1.5 audiowide-regular"><i class="fas fa-print text-sm"></i> Cetak</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-stok" class="hidden space-y-4">
+            <div id="stok-tabs-container" class="flex bg-[#000000] rounded-xl p-1 border border-[#666666] mb-4 mt-1 items-center">
+                <button onclick="toggleStokSearch(true)" id="btn-stok-search" class="px-3 text-[#808080] transition-colors active:text-white"><i class="fas fa-search text-sm"></i></button>
+                <div id="stok-tabs" class="flex flex-1 gap-1">
+                    <button onclick="tab('sup')" id="b-sup" class="audiowide-regular flex-1 py-2 text-[10px] uppercase rounded-lg tab-active transition-colors text-[#808080] bg-transparent">Supplier</button>
+                    <button onclick="tab('retur')" id="b-retur" class="audiowide-regular flex-1 py-2 text-[10px] uppercase rounded-lg transition-colors text-[#808080] bg-transparent">Retur</button>
+                    <button onclick="tab('lap')" id="b-lap" class="audiowide-regular flex-1 py-2 text-[10px] uppercase rounded-lg transition-colors text-[#808080] bg-transparent">Laporan</button>
+                </div>
+                <div id="stok-search-box" class="hidden flex-1 relative items-center">
+                    <input type="text" id="i-stok-search" oninput="renderStok(curTab)" placeholder="Cari..." class="border-none w-full py-2 pl-3 pr-8 rounded-lg font-bold text-xs outline-none bg-transparent text-[#ffffff] focus:ring-0 placeholder-[#808080]">
+                    <button onclick="toggleStokSearch(false)" class="absolute right-2 top-1/2 -translate-y-1/2 text-[#ff0000] font-black text-sm p-1 transition-colors active:text-white"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div id="stok-content" class="space-y-3 pb-24"></div>
+            
+            <button onclick="openModalSup()" id="fab" class="fixed right-5 bottom-5 w-[56px] h-[56px] bg-transparent text-[#ffffff] rounded-[16px] flex items-center justify-center text-2xl z-50 transition-colors active:text-[#666666] active:border-[#666666] border border-[#ffffff]">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
     </main>
 
@@ -315,7 +323,7 @@
             </div>
             
             <div class="flex gap-2 pt-1" id="m-btn-container">
-                <button id="m-cancel" onclick="closeModal()" style="display:none;" class="flex-1 py-3 text-xs font-black text-[#ff0000] uppercase rounded-xl bg-transparent border border-[#ff0000] transition-colors active:text-white active:border-white audiowide-regular">Batal</button>
+                <button id="m-cancel" onclick="closeModal()" style="display:none;" class="flex-1 py-3 text-xs font-black text-[#808080] uppercase rounded-xl bg-transparent border border-[#808080] transition-colors active:text-white active:border-white audiowide-regular">Batal</button>
                 <button id="m-back" onclick="backToStep1()" style="display:none;" class="flex-1 py-3 text-xs font-black text-[#facc15] uppercase rounded-xl bg-transparent border border-[#facc15] transition-colors active:text-white active:border-white audiowide-regular">Kembali</button>
                 <button id="m-confirm" tabindex="-1" class="flex-1 py-3 text-[#666666] bg-transparent border border-[#666666] rounded-xl text-xs font-black uppercase transition-colors active:text-white active:border-white z-[2300] relative audiowide-regular">Oke</button>
             </div>
@@ -361,72 +369,33 @@
             navMode('kasir'); 
         };
 
-        // FITUR INTERACTIVE SWIPE (LAYAR TERBELAH & AMBANG BATAS DIPERJAUH)
+        // FITUR GESTUR GESER LAYAR GLOBAL
         function setupSwipe() {
-            let startX = 0, startY = 0, isDragging = false, currentTranslate = 0;
-            const track = document.getElementById('swipe-track');
-
-            track.addEventListener('touchstart', e => {
-                if (activeModalId) return;
+            let startX = 0, startY = 0;
+            document.addEventListener('touchstart', e => {
+                if (activeModalId) return; 
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
-                isDragging = true;
-                track.style.transition = 'none'; 
-                currentTranslate = currentMainMode === 'kasir' ? 0 : -50;
             }, {passive: true});
-
-            track.addEventListener('touchmove', e => {
-                if (!isDragging || activeModalId) return;
-                let diffX = e.touches[0].clientX - startX;
-                let diffY = e.touches[0].clientY - startY;
-                
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
-                    let percentMove = (diffX / window.innerWidth) * 50; 
-                    let newTranslate = currentTranslate + percentMove;
-                    if (newTranslate > 0) newTranslate = 0;
-                    if (newTranslate < -50) newTranslate = -50;
-                    track.style.transform = `translateX(${newTranslate}%)`;
-                }
-            }, {passive: true});
-
-            track.addEventListener('touchend', e => {
-                if (!isDragging || activeModalId || startX === 0) return;
-                isDragging = false;
-                track.style.transition = 'transform 0.3s ease-out'; 
-
+            document.addEventListener('touchend', e => {
+                if (activeModalId || startX === 0) return;
                 let diffX = e.changedTouches[0].clientX - startX;
                 let diffY = e.changedTouches[0].clientY - startY;
-                
-                // Threshold diperjauh menjadi ~30% dari lebar layar
-                let threshold = window.innerWidth * 0.3;
-
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > threshold) {
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 60) {
                     if (diffX < 0 && currentMainMode === 'kasir') {
                         pilihMenu('stok'); 
                     } else if (diffX > 0 && currentMainMode === 'stok') {
                         pilihMenu('kasir'); 
-                    } else {
-                        track.style.transform = currentMainMode === 'kasir' ? 'translateX(0%)' : 'translateX(-50%)';
                     }
-                } else {
-                    track.style.transform = currentMainMode === 'kasir' ? 'translateX(0%)' : 'translateX(-50%)';
                 }
                 startX = 0;
             }, {passive: true});
         }
 
-        function updateLampuHeader(modeStr) {
-            const chars = document.querySelectorAll('.led-char');
-            chars.forEach((el, index) => {
-                if (modeStr === 'kasir') {
-                    el.style.animationDelay = (index * 0.1) + 's';
-                } else {
-                    el.style.animationDelay = ((chars.length - 1 - index) * 0.1) + 's';
-                }
-            });
+        // FUNGSI PINDAH MENU LANGSUNG DARI TOMBOL ATAS
+        function toggleMainMode() {
+            pilihMenu(currentMainMode === 'kasir' ? 'stok' : 'kasir');
         }
-
-        function toggleMainMode() { pilihMenu(currentMainMode === 'kasir' ? 'stok' : 'kasir'); }
 
         document.addEventListener('keydown', (e) => { 
             if (e.key === 'Enter') { 
@@ -461,7 +430,7 @@
                     if (isUploading) dataChangedDuringUpload = true;
                 }
                 refreshDL(); 
-                if (curTab) renderStok(curTab); 
+                if (!document.getElementById('section-stok').classList.contains('hidden')) renderStok(curTab); 
             } catch(e) { openModal("MEMORI PENUH", "", "Penyimpanan HP penuh!", null, "alert"); }
         }
         
@@ -571,39 +540,35 @@
         function waStruk(trx) { if (!trx) return; let h = `          STORE fam BARLA        \n     Ps. Sunggingan Lt. 2      \n-------------------------------\n`; h += `${trx.waktu.replace('-', ' - ')}`.padStart(31, ' ') + `\n-------------------------------\n`; trx.items.forEach(i => { let qu = escapeHTML(i.displayTxt).padEnd(10, ' '), nm = escapeHTML(i.nama).substring(0, 11).padEnd(12, ' '), sub = i.subTotal.toLocaleString('id-ID').padStart(9, ' '); h += `${qu}${nm}${sub}\n`; }); h += `-------------------------------\nTOTAL`.padEnd(22, ' ') + trx.total.toLocaleString('id-ID').padStart(9, ' ') + `\nBAYAR`.padEnd(22, ' ') + trx.bayar.toLocaleString('id-ID').padStart(9, ' ') + `\nKEMBALIAN`.padEnd(22, ' ') + trx.kembali.toLocaleString('id-ID').padStart(9, ' '); window.open(`https://wa.me/?text=${encodeURIComponent("```\n" + h + "\n```")}`); }
         function cetakUlang(id) { let trx = db.history.find(x => x.id === id) || tempCloudHistory.find(x => x.id === id); cetakStruk(trx); } function waUlang(id) { let trx = db.history.find(x => x.id === id) || tempCloudHistory.find(x => x.id === id); waStruk(trx); }
 
-        function openMenuModal() { pilihMenu(currentMainMode === 'kasir' ? 'stok' : 'kasir'); }
+        function openMenuModal() { 
+            const bk = document.getElementById('btn-nav-kasir'), bs = document.getElementById('btn-nav-stok');
+            if (currentMainMode === 'kasir') { bk.className = "w-full flex items-center justify-center gap-3 p-4 rounded-xl font-bold uppercase text-xs border border-[#3b82f6] text-[#3b82f6] bg-transparent transition-colors active:text-white active:border-white audiowide-regular"; bk.innerHTML = `<i class="fas fa-store text-lg"></i> KASIR`; bs.className = "w-full flex items-center justify-center gap-3 p-4 rounded-xl font-bold uppercase text-xs border border-[#333333] text-[#333333] bg-transparent transition-colors active:text-white active:border-white audiowide-regular"; bs.innerHTML = `<i class="fas fa-box-open text-lg text-[#1e3a8a]"></i> STOK`; } 
+            else { bs.className = "w-full flex items-center justify-center gap-3 p-4 rounded-xl font-bold uppercase text-xs border border-[#3b82f6] text-[#3b82f6] bg-transparent transition-colors active:text-white active:border-white audiowide-regular"; bs.innerHTML = `<i class="fas fa-box-open text-lg"></i> STOK`; bk.className = "w-full flex items-center justify-center gap-3 p-4 rounded-xl font-bold uppercase text-xs border border-[#333333] text-[#333333] bg-transparent transition-colors active:text-white active:border-white audiowide-regular"; bk.innerHTML = `<i class="fas fa-store text-lg text-[#1e3a8a]"></i> KASIR`; }
+            document.getElementById('modal-menu-nav').style.display = 'flex'; activeModalId = 'modal-menu-nav'; 
+        }
 
+        // PERUBAHAN FUNGSI PILIH MENU UNTUK TOMBOL DINAMIS & SWIPE
         function pilihMenu(modeStr) { 
+            document.getElementById('modal-menu-nav').style.display = 'none'; 
             activeModalId = null; 
             if (currentMainMode !== modeStr) { 
-                currentMainMode = modeStr; 
                 navMode(modeStr); 
+                currentMainMode = modeStr; 
                 
                 const btnText = document.getElementById('menu-active-text');
                 const btnIcon = document.getElementById('menu-active-icon');
                 if (modeStr === 'kasir') {
                     btnText.innerText = 'STOK';
-                    btnIcon.className = 'fas fa-arrow-right text-[12px] text-[#808080] leading-none mb-0.5 sweep-right-anim inline-block';
+                    btnIcon.className = 'fas fa-arrow-right text-[10px] text-[#808080] leading-none mb-0.5 sweep-right-anim inline-block';
                 } else {
                     btnText.innerText = 'KASIR';
-                    btnIcon.className = 'fas fa-arrow-left text-[12px] text-[#808080] leading-none mb-0.5 sweep-left-anim inline-block';
+                    btnIcon.className = 'fas fa-arrow-left text-[10px] text-[#808080] leading-none mb-0.5 sweep-left-anim inline-block';
                 }
             } 
         }
 
         function navMode(m) { if (m === 'stok') curTab = 'sup'; mode(m); } 
-        function mode(m) { 
-            openIdx = null; matikanKamera(); 
-            const track = document.getElementById('swipe-track');
-            if (track) {
-                track.style.transition = 'transform 0.3s ease-out';
-                track.style.transform = m === 'kasir' ? 'translateX(0%)' : 'translateX(-50%)';
-            }
-            if (m === 'kasir') toggleStokSearch(false);
-            if (m === 'stok') tab(curTab);
-            updateLampuHeader(m);
-        }
-
+        function mode(m) { openIdx = null; matikanKamera(); document.getElementById('section-kasir').classList.toggle('hidden', m!=='kasir'); document.getElementById('section-stok').classList.toggle('hidden', m!=='stok'); document.getElementById('h-kasir').classList.toggle('hidden', m!=='kasir'); document.getElementById('h-stok').classList.toggle('hidden', m!=='stok'); document.getElementById('fab').style.display = (m==='stok' && curTab==='sup') ? 'flex' : 'none'; if (m === 'kasir') toggleStokSearch(false); if (m === 'stok') tab(curTab); }
         function tab(t) { openIdx = null; matikanKamera(); curTab = t; ['sup','retur','lap'].forEach(id => document.getElementById('b-'+id).classList.toggle('tab-active', id===t)); document.getElementById('fab').style.display = (t==='sup') ? 'flex' : 'none'; renderStok(t); }
         function toggleStokSearch(show) { const tabs = document.getElementById('stok-tabs'), sIcon = document.getElementById('btn-stok-search'), sBox = document.getElementById('stok-search-box'), sInput = document.getElementById('i-stok-search'); if(show) { tabs.classList.add('hidden'); sIcon.classList.add('hidden'); sBox.classList.remove('hidden'); sBox.classList.add('flex'); sInput.focus(); } else { tabs.classList.remove('hidden'); sIcon.classList.remove('hidden'); sBox.classList.add('hidden'); sBox.classList.remove('flex'); sInput.value = ''; renderStok(curTab); } }
         function toggleDropdownSup(tipe, idx) { let idDropdown = `dd-${tipe==='ecer'?'sk':'sb'}-${idx}`; if(curDropdownOpen && curDropdownOpen !== idDropdown) { document.getElementById(curDropdownOpen).classList.add('hidden'); } let curVal = document.getElementById(`ib-${tipe==='ecer'?'sk':'sb'}-${idx}`).value; let list = tipe === 'ecer' ? ecerUnitList : grosirUnitList; let html = ''; list.filter(s => s !== curVal).forEach(s => { html += `<div onclick="setSatuanMain('${tipe}', ${idx}, '${s}')" class="p-3 text-[10px] font-bold text-[#ffffff] uppercase border-b border-[#666666] transition-colors active:text-white active:border-white bg-transparent cursor-pointer">${s}</div>`; }); if(html === '') html = `<div class="p-3 text-[10px] font-bold text-[#808080] italic">Habis</div>`; let dropdown = document.getElementById(idDropdown); dropdown.innerHTML = html; dropdown.classList.toggle('hidden'); curDropdownOpen = dropdown.classList.contains('hidden') ? null : idDropdown; }
