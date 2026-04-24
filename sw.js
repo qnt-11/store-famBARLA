@@ -1,14 +1,15 @@
 /**
  * SERVICE WORKER store famBARLA
  * Architecture: Network-First (HTML), Cache-First (CDN), Stale-While-Revalidate (Dynamic)
- * Feature: Safe Offline Fallback, Strict Memory Trimmer, App Window Manager
  */
 
-const APP_VERSION = '1.9';
+const APP_VERSION = '2.0';
 
 const CACHE_CORE = 'fambarla-core-v' + APP_VERSION; 
 const CACHE_DYNAMIC = 'fambarla-dynamic-v' + APP_VERSION;
+const CACHE_CDN = 'fambarla-cdn-v1'; 
 const MAX_DYNAMIC_ITEMS = 50; 
+let isTrimming = false;
 
 const coreUrls = [
   './',
@@ -24,10 +25,9 @@ const cdnDomains = [
   'fonts.gstatic.com'
 ];
 
-/**
- * FUNGSI: Memangkas cache dinamis agar memori HP tidak penuh
- */
 async function trimCache(cacheName, maxItems) {
+  if (isTrimming) return;
+  isTrimming = true;
   try {
     const cache = await caches.open(cacheName);
     const keys = await cache.keys();
@@ -37,12 +37,11 @@ async function trimCache(cacheName, maxItems) {
     }
   } catch (e) {
     console.error('Trim Cache Error:', e);
+  } finally {
+    isTrimming = false;
   }
 }
 
-// ==========================================
-// EVENT: INSTALL (Mempersiapkan File Inti)
-// ==========================================
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_CORE).then(cache => {
@@ -61,14 +60,12 @@ self.addEventListener('install', event => {
   );
 });
 
-// ==========================================
-// EVENT: ACTIVATE (Membuang Cache Versi Lama)
-// ==========================================
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
       return Promise.all(keys.map(key => {
-        if (key.startsWith('fambarla-') && key !== CACHE_CORE && key !== CACHE_DYNAMIC) {
+        // Hapus cache lama kecuali Core baru, Dynamic baru, dan CDN persisten
+        if (key.startsWith('fambarla-') && key !== CACHE_CORE && key !== CACHE_DYNAMIC && key !== CACHE_CDN) {
           return caches.delete(key);
         }
       }));
@@ -76,21 +73,16 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ==========================================
-// EVENT: FETCH (Pengatur Lalu Lintas Data)
-// ==========================================
 self.addEventListener('fetch', event => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Abaikan request API & Non-GET
+  // Abaikan request API & request Non-GET
   if (req.method !== 'GET' || url.pathname.endsWith('sw.js') || url.hostname === 'script.google.com' || !url.protocol.startsWith('http')) {
     return;
   }
 
-  // ---------------------------------------------------------
-  // STRATEGI 1: Network-First (Khusus File HTML & Manifest)
-  // ---------------------------------------------------------
+  // STRATEGI 1: Network-First (Inti Aplikasi: HTML & Manifest)
   if (req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('index.html') || url.pathname.endsWith('manifest.json')) {
     event.respondWith(
       fetch(req).then(res => {
@@ -101,29 +93,25 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE_CORE).then(cache => cache.put(req, resClone));
         return res;
       }).catch(async () => {
-        // Fallback Offline
         const cachedRes = await caches.match(req, { ignoreSearch: true }) || 
                           await caches.match('./', { ignoreSearch: true }) || 
                           await caches.match('./index.html', { ignoreSearch: true });
         
         if (cachedRes) return cachedRes;
 
-        // Fallback Darurat untuk Manifest
         if (url.pathname.endsWith('manifest.json')) {
           return new Response('{"name":"store famBARLA","short_name":"famBARLA","display":"standalone","start_url":"./"}', { 
             headers: { 'Content-Type': 'application/json' } 
           });
         }
         
-        return new Response('Aplikasi sedang offline. Tidak ada data di cache.', { status: 503, statusText: 'Offline' });
+        return new Response('Aplikasi sedang offline. Tidak ada data di cache.', { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'text/plain' } });
       })
     );
     return;
   }
 
-  // ---------------------------------------------------------
-  // STRATEGI 2: Cache-First (Khusus Library CDN & Font)
-  // ---------------------------------------------------------
+  // STRATEGI 2: Cache-First (File CDN & Font Abadi)
   if (cdnDomains.some(domain => url.hostname.includes(domain))) {
     event.respondWith(
       caches.match(req, { ignoreSearch: true }).then(cachedRes => {
@@ -133,41 +121,59 @@ self.addEventListener('fetch', event => {
           if (!res || (res.status !== 200 && res.status !== 0)) return res;
           
           const resClone = res.clone();
-          caches.open(CACHE_CORE).then(cache => cache.put(req, resClone));
+          caches.open(CACHE_CDN).then(cache => cache.put(req, resClone));
           return res;
-        }).catch(() => new Response('', { status: 503, statusText: 'Offline' })); 
+        }).catch(() => {
+          const headers = new Headers();
+          if (url.pathname.endsWith('.css')) headers.set('Content-Type', 'text/css');
+          else if (url.pathname.endsWith('.js')) headers.set('Content-Type', 'application/javascript');
+          else headers.set('Content-Type', 'text/plain');
+          return new Response('', { status: 503, statusText: 'Offline', headers });
+        }); 
       })
     );
     return;
   }
 
-  // ---------------------------------------------------------
-  // STRATEGI 3: Stale-While-Revalidate (File Statis Lainnya)
-  // ---------------------------------------------------------
+  // STRATEGI 3: Stale-While-Revalidate (File Statis Dinamis Latar Belakang)
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then(cachedRes => {
       const fetchPromise = fetch(req).then(res => {
-        if (res && (res.status === 200 || res.status === 0)) {
+        // PERBAIKAN: Hanya cache file status 200 untuk mencegah kebocoran memori Opaque
+        if (res && res.status === 200) {
           const resClone = res.clone();
           caches.open(CACHE_DYNAMIC).then(cache => {
             cache.put(req, resClone).then(() => {
-              // Pemangkasan memori dijalankan tanpa memblokir proses fetch
               trimCache(CACHE_DYNAMIC, MAX_DYNAMIC_ITEMS);
             });
           });
         }
         return res;
-      }).catch(() => new Response('', { status: 503, statusText: 'Offline' }));
+      }).catch(() => {
+        const headers = new Headers();
+        if (url.pathname.endsWith('.css')) headers.set('Content-Type', 'text/css');
+        else if (url.pathname.endsWith('.js')) headers.set('Content-Type', 'application/javascript');
+        else if (url.pathname.match(/\.(png|jpg|jpeg|svg|gif)$/i)) {
+          headers.set('Content-Type', 'image/svg+xml');
+          // PERBAIKAN: Berikan file SVG valid yang transparan (1x1) alih-alih string kosong
+          return new Response('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>', { status: 503, statusText: 'Offline', headers });
+        }
+        else headers.set('Content-Type', 'text/plain');
+        
+        return new Response('', { status: 503, statusText: 'Offline', headers });
+      });
 
-      // Kembalikan versi cache jika ada, dan biarkan fetch berjalan untuk update di latar belakang
-      return cachedRes || fetchPromise;
+      // PERBAIKAN: Pastikan background fetch tidak dibunuh browser jika cache sudah tampil
+      if (cachedRes) {
+        event.waitUntil(fetchPromise);
+        return cachedRes;
+      }
+      
+      return fetchPromise;
     })
   );
 });
 
-// ==========================================
-// FITUR: Hook Pengendali Aplikasi
-// ==========================================
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
@@ -184,7 +190,7 @@ self.addEventListener('notificationclick', event => {
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow('./');
+        return clients.openWindow(self.registration.scope);
       }
     })
   );
